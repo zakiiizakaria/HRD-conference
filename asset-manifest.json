@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/zakiiizakaria.github.io/static/css/main.f855e6bc.css",
+    "main.js": "/zakiiizakaria.github.io/static/js/main.a87b7624.js",
+    "static/js/453.bdbc8f63.chunk.js": "/zakiiizakaria.github.io/static/js/453.bdbc8f63.chunk.js",
+    "index.html": "/zakiiizakaria.github.io/index.html",
+    "main.f855e6bc.css.map": "/zakiiizakaria.github.io/static/css/main.f855e6bc.css.map",
+    "main.a87b7624.js.map": "/zakiiizakaria.github.io/static/js/main.a87b7624.js.map",
+    "453.bdbc8f63.chunk.js.map": "/zakiiizakaria.github.io/static/js/453.bdbc8f63.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f855e6bc.css",
+    "static/js/main.a87b7624.js"
+  ]
+}
