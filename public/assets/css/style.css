@@ -660,8 +660,13 @@ p {
 
 .navbar-area .navbar .navbar-brand img {
   max-height: 70px;
+  max-width: 130px;
   width: auto;
   transition: all 0.3s ease;
+}
+
+.navbar-area .navbar .navbar-brand img:hover {
+  transform: perspective(300px) rotateY(-15deg) skewX(-5deg) translateY(-3px);
 }
 
 .navbar-area.sticky .navbar .navbar-brand img {
@@ -1687,6 +1692,7 @@ p {
 }
 
 .pricing-package-price .price-info {
+  font-weight:600;
   font-size: 14px;
   color: black;
   transition: all 0.3s ease;
@@ -3534,6 +3540,31 @@ p {
   padding: 40px;
   box-shadow: 0 5px 25px rgb(63 23 231 / 40%);
   height: 100%;
+}
+
+.price-claimable-card {
+  padding: 30px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgb(63 23 231 / 40%);
+}
+
+.price-claimable-card img:hover {
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.price-claimable-card:hover {
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+@media screen and (max-width: 991px) {
+  .price-claimable-card {
+    border-radius: 15px;
+    margin-bottom: 20px;
+    padding: 30px;
+  }
 }
 
 .sponsor-form-title {
