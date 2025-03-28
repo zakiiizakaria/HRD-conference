@@ -87,7 +87,7 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_7xo74zc', // Your EmailJS template ID
+                'template_jlqy0e9', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
