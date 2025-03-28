@@ -12,7 +12,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 // Database configuration
 $host = "1";
 $username = "u197368543_hrd";
-$password = "7rR/bOAyE";
+$password = "12345";
 $database = "u197368543_hrd_db";
 
 // Test database connection
