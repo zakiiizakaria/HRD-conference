@@ -87,12 +87,13 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_z04wz7n', // Your EmailJS template ID
+                'template_zcg13zk', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Sponsorship Inquiry from ' + fullName,
+                    email_header: 'New Sponsorship Inquiry',
                     message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
