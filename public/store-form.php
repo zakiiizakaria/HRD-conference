@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration for Hostinger
-$host = "localhost";  // Using localhost for Hostinger
+$host = "127.0.0.1";  // Using localhost for Hostinger
 $username = "u197368543_hrd"; // From your new database user screenshot
 $password = "7rR/bOAyE"; // Updated password
 $database = "u197368543_hrd_db"; // From your new database name screenshot
