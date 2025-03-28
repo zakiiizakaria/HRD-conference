@@ -660,8 +660,13 @@ p {
 
 .navbar-area .navbar .navbar-brand img {
   max-height: 70px;
+  max-width: 130px;
   width: auto;
   transition: all 0.3s ease;
+}
+
+.navbar-area .navbar .navbar-brand img:hover {
+  transform: perspective(300px) rotateY(-15deg) skewX(-5deg) translateY(-3px);
 }
 
 .navbar-area.sticky .navbar .navbar-brand img {
@@ -874,16 +879,16 @@ p {
           margin-top: 0; } }
     .header-countdown .single-count-content.count-color-1 .count,
     .header-countdown .single-count-content.count-color-1 .text {
-      color: red; }
+      color: rgb(255, 209, 125) }
     .header-countdown .single-count-content.count-color-2 .count,
     .header-countdown .single-count-content.count-color-2 .text {
-      color: #ffc107; }
+      color: rgb(255, 209, 125) }
     .header-countdown .single-count-content.count-color-3 .count,
     .header-countdown .single-count-content.count-color-3 .text {
-      color: #03a9f4; }
+      color: rgb(255, 209, 125) }
     .header-countdown .single-count-content.count-color-4 .count,
     .header-countdown .single-count-content.count-color-4 .text {
-      color: #8bc34a; }
+      color: rgb(255, 209, 125) }
 
   .header-content {
     margin-top: 60px;
@@ -1687,6 +1692,7 @@ p {
 }
 
 .pricing-package-price .price-info {
+  font-weight:600;
   font-size: 14px;
   color: black;
   transition: all 0.3s ease;
@@ -2153,6 +2159,7 @@ p {
 }
 
 .single-speaker .speaker-image img {
+  scale: 1.3;
   width: 100%;
   height: auto;
   transition: all 0.5s ease-out;
@@ -3534,6 +3541,31 @@ p {
   padding: 40px;
   box-shadow: 0 5px 25px rgb(63 23 231 / 40%);
   height: 100%;
+}
+
+.price-claimable-card {
+  padding: 30px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgb(63 23 231 / 40%);
+}
+
+.price-claimable-card img:hover {
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.price-claimable-card:hover {
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+@media screen and (max-width: 991px) {
+  .price-claimable-card {
+    border-radius: 15px;
+    margin-bottom: 20px;
+    padding: 30px;
+  }
 }
 
 .sponsor-form-title {
