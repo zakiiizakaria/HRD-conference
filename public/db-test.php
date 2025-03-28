@@ -10,7 +10,7 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
-$host = "localhost";  // Changed back to localhost for shared hosting
+$host = "srv1658.hstgr.io";  // From Hostinger Remote MySQL screenshot
 $username = "u197368543_hrd";
 $password = "7rR/bOAyE";
 $database = "u197368543_hrd_db";

@@ -25,11 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration for Hostinger
-// For Hostinger, use the MySQL hostname from their control panel
-$host = "localhost";  // Try localhost again, which is standard for shared hosting
-$username = "u197368543_hrd"; // From your new database user screenshot
+// Using the Remote MySQL hostname from Hostinger's control panel
+$host = "srv1658.hstgr.io";  // From Hostinger Remote MySQL screenshot
+$username = "u197368543_hrd"; // From your database user screenshot
 $password = "7rR/bOAyE"; // Updated password
-$database = "u197368543_hrd_db"; // From your new database name screenshot
+$database = "u197368543_hrd_db"; // From your database name screenshot
 
 // Function to generate a unique ID
 function generateUniqueId() {
