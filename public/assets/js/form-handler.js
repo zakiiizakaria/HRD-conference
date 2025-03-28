@@ -89,7 +89,6 @@ function initFormHandlers() {
                 'service_pty2v88', // Your EmailJS service ID
                 'template_ubqmm7y', // Your EmailJS template ID
                 {
-                    to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Sponsorship Inquiry from ' + fullName,
@@ -221,7 +220,6 @@ function initFormHandlers() {
                 'service_pty2v88', // Your EmailJS service ID
                 'template_ubqmm7y', // Your EmailJS template ID
                 {
-                    to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Speaker Proposal from ' + fullName,
@@ -357,7 +355,6 @@ function initFormHandlers() {
                 'service_pty2v88', // Your EmailJS service ID
                 'template_ubqmm7y', // Your EmailJS template ID for registration
                 {
-                    to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Registration from ' + fullName,
