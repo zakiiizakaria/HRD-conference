@@ -111,8 +111,12 @@ function initFormHandlers() {
                         'Accept': 'application/json'
                     }
                 })
-                .then(response => response.text())
+                .then(response => {
+                    console.log('Database response status:', response.status);
+                    return response.text();
+                })
                 .then(text => {
+                    console.log('Raw database response:', text);
                     try {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
@@ -237,8 +241,12 @@ function initFormHandlers() {
                         'Accept': 'application/json'
                     }
                 })
-                .then(response => response.text())
+                .then(response => {
+                    console.log('Database response status:', response.status);
+                    return response.text();
+                })
                 .then(text => {
+                    console.log('Raw database response:', text);
                     try {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
@@ -369,8 +377,12 @@ function initFormHandlers() {
                         'Accept': 'application/json'
                     }
                 })
-                .then(response => response.text())
+                .then(response => {
+                    console.log('Database response status:', response.status);
+                    return response.text();
+                })
                 .then(text => {
+                    console.log('Raw database response:', text);
                     try {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
