@@ -1,6 +1,6 @@
 /**
- * Form Handler for Sponsorship and Speaker Forms
- * Handles form submissions and sends emails with form data
+ * Form Handler for Sponsorship, Speaker, and Registration Forms
+ * Handles form submissions using EmailJS and stores data in MySQL database
  */
 
 // Function to check if EmailJS is loaded
@@ -8,9 +8,9 @@ function isEmailJSLoaded() {
     return typeof window.emailjs !== 'undefined';
 }
 
-// Function to initialize form handlers once EmailJS is available
+// Function to handle form submissions
 function initFormHandlers() {
-    console.log('Initializing form handlers with EmailJS');
+    console.log('Initializing form handlers');
     
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
@@ -74,10 +74,20 @@ function initFormHandlers() {
                 </html>
             `;
             
-            // Send email using EmailJS service
+            // Create form data for database storage
+            const formData = new FormData();
+            formData.append('form_type', 'sponsorship');
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('interest', interest);
+            
+            // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_z04wz7n', // Replace with your EmailJS template ID
+                'template_z04wz7n', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
@@ -91,34 +101,46 @@ function initFormHandlers() {
                 }
             )
             .then(function(response) {
-                console.log('SUCCESS!', response.status, response.text);
-                showSuccessMessage(sponsorForm);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
+                console.log('Email sent successfully!', response.status, response.text);
+                
+                // After email is sent, save to database
+                fetch('https://hrdconference.com/store-form.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Database save result:', data);
+                        if (data.success) {
+                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully and saved to our database!');
+                        } else {
+                            console.warn('Database save failed:', data.message);
+                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        }
+                    } catch (e) {
+                        console.error('Invalid JSON response:', text);
+                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    }
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Database error:', error);
+                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
             }, function(error) {
-                console.log('FAILED...', error);
+                console.log('Email sending failed...', error);
                 showErrorMessage(sponsorForm);
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
-            
-            /* Testing code - comment out when EmailJS is working
-            // For testing - simulate successful submission without EmailJS
-            setTimeout(function() {
-                console.log('Form data that would be sent:', {
-                    fullName,
-                    email,
-                    company,
-                    jobTitle,
-                    contactNumber,
-                    interest
-                });
-                
-                showSuccessMessage(sponsorForm, 'Test mode: Form submitted successfully! In production, an email would be sent.');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            }, 2000);
-            */
         });
     }
     
@@ -180,10 +202,19 @@ function initFormHandlers() {
                 </html>
             `;
             
-            // Send email using EmailJS service
+            // Create form data for database storage
+            const formData = new FormData();
+            formData.append('form_type', 'speaker');
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            
+            // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_speaker', // Replace with your EmailJS template ID
+                'template_speaker', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
@@ -196,33 +227,178 @@ function initFormHandlers() {
                 }
             )
             .then(function(response) {
-                console.log('SUCCESS!', response.status, response.text);
-                showSuccessMessage(speakingForm);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
+                console.log('Email sent successfully!', response.status, response.text);
+                
+                // After email is sent, save to database
+                fetch('https://hrdconference.com/store-form.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Database save result:', data);
+                        if (data.success) {
+                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully and saved to our database!');
+                        } else {
+                            console.warn('Database save failed:', data.message);
+                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        }
+                    } catch (e) {
+                        console.error('Invalid JSON response:', text);
+                        showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    }
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Database error:', error);
+                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
             }, function(error) {
-                console.log('FAILED...', error);
+                console.log('Email sending failed...', error);
                 showErrorMessage(speakingForm);
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
+        });
+    }
+    
+    // Registration Form Handler
+    const registrationForm = document.getElementById('pricing-form');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            /* Testing code - comment out when EmailJS is working
-            // For testing - simulate successful submission without EmailJS
-            setTimeout(function() {
-                console.log('Form data that would be sent:', {
-                    fullName,
-                    email,
-                    company,
-                    jobTitle,
-                    contactNumber
-                });
+            // Get form data
+            const fullName = registrationForm.querySelector('input[placeholder="Full Name"]').value;
+            const email = registrationForm.querySelector('input[placeholder="Email Address"]').value;
+            const company = registrationForm.querySelector('input[placeholder="Company Name"]').value;
+            const jobTitle = registrationForm.querySelector('input[placeholder="Job Title"]').value;
+            const contactNumber = registrationForm.querySelector('input[placeholder="Contact Number"]').value;
+            const promoCode = registrationForm.querySelector('input[placeholder="Promo Code (optional)"]').value;
+            
+            // Show loading state
+            const submitBtn = registrationForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Create email content with HTML template
+            const emailContent = `
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        h1 { color: #1863ff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+                        .info-item { margin-bottom: 10px; }
+                        .label { font-weight: bold; }
+                        .footer { margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>New Registration</h1>
+                        <div class="info-item">
+                            <span class="label">Full Name:</span> ${fullName}
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Email:</span> ${email}
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Company:</span> ${company}
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Job Title:</span> ${jobTitle}
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Contact Number:</span> ${contactNumber}
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Promo Code:</span> ${promoCode}
+                        </div>
+                        <div class="footer">
+                            This email was sent from the HRD Conference 2025 website registration form.
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create form data for database storage
+            const formData = new FormData();
+            formData.append('form_type', 'registration');
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('promoCode', promoCode);
+            
+            // First send email using EmailJS service
+            window.emailjs.send(
+                'service_pty2v88', // Your EmailJS service ID
+                'template_z04wz7n', // Your EmailJS template ID for registration
+                {
+                    to_email: 'helmizaki1997@gmail.com',
+                    from_name: fullName,
+                    from_email: email,
+                    subject: 'New Registration from ' + fullName,
+                    message_html: emailContent,
+                    company: company,
+                    job_title: jobTitle,
+                    contact_number: contactNumber,
+                    promo_code: promoCode
+                }
+            )
+            .then(function(response) {
+                console.log('Email sent successfully!', response.status, response.text);
                 
-                showSuccessMessage(speakingForm, 'Test mode: Form submitted successfully! In production, an email would be sent.');
+                // After email is sent, save to database
+                fetch('https://hrdconference.com/store-form.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Database save result:', data);
+                        if (data.success) {
+                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully and saved to our database!');
+                        } else {
+                            console.warn('Database save failed:', data.message);
+                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        }
+                    } catch (e) {
+                        console.error('Invalid JSON response:', text);
+                        showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    }
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Database error:', error);
+                    showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            }, function(error) {
+                console.log('Email sending failed...', error);
+                showErrorMessage(registrationForm);
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 2000);
-            */
+            });
         });
     }
     
@@ -311,6 +487,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorMessage.className = 'form-message error-message';
                     errorMessage.innerHTML = '<i class="lni-warning"></i> Email service is not available. Please try again later or contact us directly.';
                     speakingForm.parentNode.insertBefore(errorMessage, speakingForm.nextSibling);
+                }
+                
+                const registrationForm = document.getElementById('pricing-form');
+                if (registrationForm) {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'form-message error-message';
+                    errorMessage.innerHTML = '<i class="lni-warning"></i> Email service is not available. Please try again later or contact us directly.';
+                    registrationForm.parentNode.insertBefore(errorMessage, registrationForm.nextSibling);
                 }
             }
         }, 100);
