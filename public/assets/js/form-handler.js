@@ -125,18 +125,18 @@ function initFormHandlers() {
                             showSuccessMessage(sponsorForm, 'Your form has been submitted successfully and saved to our database!');
                         } else {
                             console.warn('Database save failed:', data.message);
-                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); // , but there was an issue saving to our database.
                         }
                     } catch (e) {
                         console.error('Invalid JSON response:', text);
-                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); //, but there was an issue saving to our database.
                     }
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
                     console.error('Database error:', error);
-                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); //, but there was an issue saving to our database.
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -255,18 +255,18 @@ function initFormHandlers() {
                             showSuccessMessage(speakingForm, 'Your form has been submitted successfully and saved to our database!');
                         } else {
                             console.warn('Database save failed:', data.message);
-                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
                         }
                     } catch (e) {
                         console.error('Invalid JSON response:', text);
-                        showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
                     }
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
                     console.error('Database error:', error);
-                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -391,18 +391,18 @@ function initFormHandlers() {
                             showSuccessMessage(registrationForm, 'Your form has been submitted successfully and saved to our database!');
                         } else {
                             console.warn('Database save failed:', data.message);
-                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
                         }
                     } catch (e) {
                         console.error('Invalid JSON response:', text);
-                        showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                        showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
                     }
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
                     console.error('Database error:', error);
-                    showSuccessMessage(registrationForm, 'Your form has been submitted successfully, but there was an issue saving to our database.');
+                    showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
