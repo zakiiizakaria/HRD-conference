@@ -87,7 +87,7 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_jlqy0e9', // Your EmailJS template ID
+                'template_ubqmm7y', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
@@ -122,21 +122,21 @@ function initFormHandlers() {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
                         if (data.success) {
-                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully and saved to our database!');
+                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
                         } else {
                             console.warn('Database save failed:', data.message);
-                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); // , but there was an issue saving to our database.
+                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
                         }
                     } catch (e) {
                         console.error('Invalid JSON response:', text);
-                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); //, but there was an issue saving to our database.
+                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
                     }
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
                     console.error('Database error:', error);
-                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!'); //, but there was an issue saving to our database.
+                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -148,7 +148,7 @@ function initFormHandlers() {
             });
         });
     }
-    
+
     // Speaking Opportunity Form Handler
     const speakingForm = document.getElementById('speaking-form');
     if (speakingForm) {
@@ -219,12 +219,13 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_speaker', // Your EmailJS template ID
+                'template_ubqmm7y', // Your EmailJS template ID
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Speaker Proposal from ' + fullName,
+                    email_header: 'New Speaker Proposal',
                     message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
@@ -252,7 +253,7 @@ function initFormHandlers() {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
                         if (data.success) {
-                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully and saved to our database!');
+                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
                         } else {
                             console.warn('Database save failed:', data.message);
                             showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
@@ -266,7 +267,7 @@ function initFormHandlers() {
                 })
                 .catch(error => {
                     console.error('Database error:', error);
-                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully');
+                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -354,12 +355,13 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_7xo74zc', // Your EmailJS template ID for registration
+                'template_ubqmm7y', // Your EmailJS template ID for registration
                 {
                     to_email: 'helmizaki1997@gmail.com',
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Registration from ' + fullName,
+                    email_header: 'New Registration',
                     message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
@@ -388,7 +390,7 @@ function initFormHandlers() {
                         const data = JSON.parse(text);
                         console.log('Database save result:', data);
                         if (data.success) {
-                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully and saved to our database!');
+                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
                         } else {
                             console.warn('Database save failed:', data.message);
                             showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
