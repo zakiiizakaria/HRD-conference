@@ -35,7 +35,7 @@ function initFormHandlers() {
             // Send email using EmailJS service backup
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
-                'template_1pnktja', // Your EmailJS template ID
+                'template_etjjplb', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -83,7 +83,7 @@ function initFormHandlers() {
             // Send email using EmailJS service backup
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
-                'template_1pnktja', // Your EmailJS template ID
+                'template_etjjplb', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -131,7 +131,7 @@ function initFormHandlers() {
             // Send email using EmailJS service backup
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
-                'template_1pnktja', // Your EmailJS template ID for registration
+                'template_etjjplb', // Your EmailJS template ID for registration
                 {
                     from_name: fullName,
                     from_email: email,
