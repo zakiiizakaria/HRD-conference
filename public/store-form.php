@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // For Hostinger, use the MySQL hostname from their control panel
 $host = "localhost";  // Try localhost again, which is standard for shared hosting
 $username = "u197368543_hrd"; // From your new database user screenshot
-$password = "12345"; // Updated password
+$password = "7rR/bOAyE"; // Updated password
 $database = "u197368543_hrd_db"; // From your new database name screenshot
 
 // Function to generate a unique ID

@@ -12,7 +12,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 // Database configuration
 $host = "localhost";  // Changed back to localhost for shared hosting
 $username = "u197368543_hrd";
-$password = "12345";
+$password = "7rR/bOAyE";
 $database = "u197368543_hrd_db";
 
 // Test database connection
