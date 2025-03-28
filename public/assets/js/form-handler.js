@@ -1,6 +1,6 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
- * Handles form submissions using EmailJS and stores data in MySQL database
+ * Handles form submissions using EmailJS
  */
 
 // Function to check if EmailJS is loaded
@@ -32,68 +32,15 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create email content with HTML template
-            const emailContent = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        h1 { color: #1863ff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-                        .info-item { margin-bottom: 10px; }
-                        .label { font-weight: bold; }
-                        .footer { margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h1>New Sponsorship Inquiry</h1>
-                        <div class="info-item">
-                            <span class="label">Full Name:</span> ${fullName}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Email:</span> ${email}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Company:</span> ${company}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Job Title:</span> ${jobTitle}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Contact Number:</span> ${contactNumber}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Interest:</span> ${interest}
-                        </div>
-                        <div class="footer">
-                            This email was sent from the HRD Conference 2025 website sponsorship form.
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            // Create form data for database storage
-            const formData = new FormData();
-            formData.append('form_type', 'sponsorship');
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
-            formData.append('interest', interest);
-            
-            // First send email using EmailJS service
+            // Send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_gexdiiq', // Your EmailJS template ID
+                'template_hltdu4y', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Sponsorship Inquiry from ' + fullName,
                     email_header: 'New Sponsorship Inquiry',
-                    message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
                     contact_number: contactNumber,
@@ -102,43 +49,9 @@ function initFormHandlers() {
             )
             .then(function(response) {
                 console.log('Email sent successfully!', response.status, response.text);
-                
-                // After email is sent, save to database
-                fetch('https://hrdconference.com/store-form.php', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    console.log('Database response status:', response.status);
-                    return response.text();
-                })
-                .then(text => {
-                    console.log('Raw database response:', text);
-                    try {
-                        const data = JSON.parse(text);
-                        console.log('Database save result:', data);
-                        if (data.success) {
-                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
-                        } else {
-                            console.warn('Database save failed:', data.message);
-                            showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
-                        }
-                    } catch (e) {
-                        console.error('Invalid JSON response:', text);
-                        showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
-                    }
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Database error:', error);
-                    showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
+                showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
             }, function(error) {
                 console.log('Email sending failed...', error);
                 showErrorMessage(sponsorForm);
@@ -167,64 +80,15 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create email content with HTML template
-            const emailContent = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        h1 { color: #1863ff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-                        .info-item { margin-bottom: 10px; }
-                        .label { font-weight: bold; }
-                        .footer { margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h1>New Speaker Proposal</h1>
-                        <div class="info-item">
-                            <span class="label">Full Name:</span> ${fullName}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Email:</span> ${email}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Company:</span> ${company}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Job Title:</span> ${jobTitle}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Contact Number:</span> ${contactNumber}
-                        </div>
-                        <div class="footer">
-                            This email was sent from the HRD Conference 2025 website speaking opportunity form.
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            // Create form data for database storage
-            const formData = new FormData();
-            formData.append('form_type', 'speaker');
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
-            
-            // First send email using EmailJS service
+            // Send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_gexdiiq', // Your EmailJS template ID
+                'template_hltdu4y', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Speaker Proposal from ' + fullName,
                     email_header: 'New Speaker Proposal',
-                    message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
                     contact_number: contactNumber
@@ -232,43 +96,9 @@ function initFormHandlers() {
             )
             .then(function(response) {
                 console.log('Email sent successfully!', response.status, response.text);
-                
-                // After email is sent, save to database
-                fetch('https://hrdconference.com/store-form.php', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    console.log('Database response status:', response.status);
-                    return response.text();
-                })
-                .then(text => {
-                    console.log('Raw database response:', text);
-                    try {
-                        const data = JSON.parse(text);
-                        console.log('Database save result:', data);
-                        if (data.success) {
-                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
-                        } else {
-                            console.warn('Database save failed:', data.message);
-                            showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
-                        }
-                    } catch (e) {
-                        console.error('Invalid JSON response:', text);
-                        showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
-                    }
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Database error:', error);
-                    showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
+                showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
             }, function(error) {
                 console.log('Email sending failed...', error);
                 showErrorMessage(speakingForm);
@@ -298,68 +128,15 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create email content with HTML template
-            const emailContent = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        h1 { color: #1863ff; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-                        .info-item { margin-bottom: 10px; }
-                        .label { font-weight: bold; }
-                        .footer { margin-top: 30px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h1>New Registration</h1>
-                        <div class="info-item">
-                            <span class="label">Full Name:</span> ${fullName}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Email:</span> ${email}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Company:</span> ${company}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Job Title:</span> ${jobTitle}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Contact Number:</span> ${contactNumber}
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Promo Code:</span> ${promoCode}
-                        </div>
-                        <div class="footer">
-                            This email was sent from the HRD Conference 2025 website registration form.
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            // Create form data for database storage
-            const formData = new FormData();
-            formData.append('form_type', 'registration');
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
-            formData.append('promoCode', promoCode);
-            
-            // First send email using EmailJS service
+            // Send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_gexdiiq', // Your EmailJS template ID for registration
+                'template_hltdu4y', // Your EmailJS template ID for registration
                 {
                     from_name: fullName,
                     from_email: email,
                     subject: 'New Registration from ' + fullName,
                     email_header: 'New Registration',
-                    message_html: emailContent,
                     company: company,
                     job_title: jobTitle,
                     contact_number: contactNumber,
@@ -368,43 +145,9 @@ function initFormHandlers() {
             )
             .then(function(response) {
                 console.log('Email sent successfully!', response.status, response.text);
-                
-                // After email is sent, save to database
-                fetch('https://hrdconference.com/store-form.php', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    console.log('Database response status:', response.status);
-                    return response.text();
-                })
-                .then(text => {
-                    console.log('Raw database response:', text);
-                    try {
-                        const data = JSON.parse(text);
-                        console.log('Database save result:', data);
-                        if (data.success) {
-                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
-                        } else {
-                            console.warn('Database save failed:', data.message);
-                            showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
-                        }
-                    } catch (e) {
-                        console.error('Invalid JSON response:', text);
-                        showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
-                    }
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Database error:', error);
-                    showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
+                showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
             }, function(error) {
                 console.log('Email sending failed...', error);
                 showErrorMessage(registrationForm);
