@@ -32,10 +32,10 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Send email using EmailJS service
+            // Send email using EmailJS service backup
             window.emailjs.send(
-                'service_pty2v88', // Your EmailJS service ID
-                'template_hltdu4y', // Your EmailJS template ID
+                'service_wshzlmp', // Your EmailJS service ID
+                'template_1pnktja', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -80,10 +80,10 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Send email using EmailJS service
+            // Send email using EmailJS service backup
             window.emailjs.send(
-                'service_pty2v88', // Your EmailJS service ID
-                'template_hltdu4y', // Your EmailJS template ID
+                'service_wshzlmp', // Your EmailJS service ID
+                'template_1pnktja', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -128,10 +128,10 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Send email using EmailJS service
+            // Send email using EmailJS service backup
             window.emailjs.send(
-                'service_pty2v88', // Your EmailJS service ID
-                'template_hltdu4y', // Your EmailJS template ID for registration
+                'service_wshzlmp', // Your EmailJS service ID
+                'template_1pnktja', // Your EmailJS template ID for registration
                 {
                     from_name: fullName,
                     from_email: email,
