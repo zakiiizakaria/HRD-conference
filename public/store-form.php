@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration for Hostinger
-$host = "127.0.0.1";  // Using localhost for Hostinger
+// For Hostinger, use the MySQL hostname from their control panel
+$host = "localhost";  // Try localhost again, which is standard for shared hosting
 $username = "u197368543_hrd"; // From your new database user screenshot
 $password = "12345"; // Updated password
 $database = "u197368543_hrd_db"; // From your new database name screenshot
@@ -45,13 +46,14 @@ function sanitizeInput($data) {
 
 // Create database connection
 try {
-    // Connect to MySQL server
-    $conn = new mysqli($host, $username, $password, $database);
+    // Connect to MySQL server - using a different connection approach
+    $conn = mysqli_init();
+    mysqli_real_connect($conn, $host, $username, $password, $database);
     
     // Check connection
-    if ($conn->connect_error) {
-        error_log("Database connection failed: " . $conn->connect_error);
-        throw new Exception("Database connection failed: " . $conn->connect_error);
+    if (mysqli_connect_errno()) {
+        error_log("Database connection failed: " . mysqli_connect_error());
+        throw new Exception("Database connection failed: " . mysqli_connect_error());
     }
     
     error_log("Database connection successful");
@@ -92,8 +94,8 @@ try {
     ];
     
     foreach ($tables as $table => $sql) {
-        if (!$conn->query($sql)) {
-            error_log("Error creating table $table: " . $conn->error);
+        if (!mysqli_query($conn, $sql)) {
+            error_log("Error creating table $table: " . mysqli_error($conn));
         } else {
             error_log("Table $table created or already exists");
         }
@@ -145,22 +147,22 @@ try {
                 $sql = "INSERT INTO sponsorship_form (id, full_name, email_address, company_name, job_title, contact_number, interest) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 error_log("SQL: $sql");
                 
-                $stmt = $conn->prepare($sql);
+                $stmt = mysqli_prepare($conn, $sql);
                 if (!$stmt) {
-                    error_log("Prepare failed: " . $conn->error);
-                    $response['message'] = 'Error preparing statement: ' . $conn->error;
+                    error_log("Prepare failed: " . mysqli_error($conn));
+                    $response['message'] = 'Error preparing statement: ' . mysqli_error($conn);
                     break;
                 }
                 
-                $stmt->bind_param("sssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber, $interest);
+                mysqli_stmt_bind_param($stmt, "sssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber, $interest);
                 
-                if ($stmt->execute()) {
+                if (mysqli_stmt_execute($stmt)) {
                     error_log("Insert successful");
                     $response['success'] = true;
                     $response['message'] = 'Sponsorship form submitted successfully and saved to database.';
                 } else {
-                    error_log("Insert failed: " . $stmt->error);
-                    $response['message'] = 'Error: ' . $stmt->error;
+                    error_log("Insert failed: " . mysqli_stmt_error($stmt));
+                    $response['message'] = 'Error: ' . mysqli_stmt_error($stmt);
                 }
                 break;
                 
@@ -169,22 +171,22 @@ try {
                 $sql = "INSERT INTO speaker_form (id, full_name, email_address, company_name, job_title, contact_number) VALUES (?, ?, ?, ?, ?, ?)";
                 error_log("SQL: $sql");
                 
-                $stmt = $conn->prepare($sql);
+                $stmt = mysqli_prepare($conn, $sql);
                 if (!$stmt) {
-                    error_log("Prepare failed: " . $conn->error);
-                    $response['message'] = 'Error preparing statement: ' . $conn->error;
+                    error_log("Prepare failed: " . mysqli_error($conn));
+                    $response['message'] = 'Error preparing statement: ' . mysqli_error($conn);
                     break;
                 }
                 
-                $stmt->bind_param("ssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber);
+                mysqli_stmt_bind_param($stmt, "ssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber);
                 
-                if ($stmt->execute()) {
+                if (mysqli_stmt_execute($stmt)) {
                     error_log("Insert successful");
                     $response['success'] = true;
                     $response['message'] = 'Speaker form submitted successfully and saved to database.';
                 } else {
-                    error_log("Insert failed: " . $stmt->error);
-                    $response['message'] = 'Error: ' . $stmt->error;
+                    error_log("Insert failed: " . mysqli_stmt_error($stmt));
+                    $response['message'] = 'Error: ' . mysqli_stmt_error($stmt);
                 }
                 break;
                 
@@ -197,22 +199,22 @@ try {
                 $sql = "INSERT INTO registration_form (id, full_name, email_address, company_name, job_title, contact_number, promo_code) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 error_log("SQL: $sql");
                 
-                $stmt = $conn->prepare($sql);
+                $stmt = mysqli_prepare($conn, $sql);
                 if (!$stmt) {
-                    error_log("Prepare failed: " . $conn->error);
-                    $response['message'] = 'Error preparing statement: ' . $conn->error;
+                    error_log("Prepare failed: " . mysqli_error($conn));
+                    $response['message'] = 'Error preparing statement: ' . mysqli_error($conn);
                     break;
                 }
                 
-                $stmt->bind_param("sssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber, $promoCode);
+                mysqli_stmt_bind_param($stmt, "sssssss", $id, $fullName, $email, $company, $jobTitle, $contactNumber, $promoCode);
                 
-                if ($stmt->execute()) {
+                if (mysqli_stmt_execute($stmt)) {
                     error_log("Insert successful");
                     $response['success'] = true;
                     $response['message'] = 'Registration form submitted successfully and saved to database.';
                 } else {
-                    error_log("Insert failed: " . $stmt->error);
-                    $response['message'] = 'Error: ' . $stmt->error;
+                    error_log("Insert failed: " . mysqli_stmt_error($stmt));
+                    $response['message'] = 'Error: ' . mysqli_stmt_error($stmt);
                 }
                 break;
                 

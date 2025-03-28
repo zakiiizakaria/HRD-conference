@@ -10,21 +10,22 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
-$host = "127.0.0.1";
+$host = "localhost";  // Changed back to localhost for shared hosting
 $username = "u197368543_hrd";
 $password = "12345";
 $database = "u197368543_hrd_db";
 
 // Test database connection
 try {
-    // Connect to database
-    $conn = new mysqli($host, $username, $password, $database);
+    // Connect to database using procedural mysqli approach
+    $conn = mysqli_init();
+    mysqli_real_connect($conn, $host, $username, $password, $database);
     
     // Check connection
-    if ($conn->connect_error) {
+    if (mysqli_connect_errno()) {
         echo json_encode([
             'success' => false,
-            'message' => 'Database connection failed: ' . $conn->connect_error,
+            'message' => 'Database connection failed: ' . mysqli_connect_error(),
             'host' => $host,
             'username' => $username,
             'database' => $database
@@ -39,10 +40,10 @@ try {
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
     
-    if (!$conn->query($testTableSql)) {
+    if (!mysqli_query($conn, $testTableSql)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to create test table: ' . $conn->error,
+            'message' => 'Failed to create test table: ' . mysqli_error($conn),
             'sql' => $testTableSql
         ]);
         exit;
@@ -51,23 +52,23 @@ try {
     // Try to insert test data
     $testData = "Test data " . date('Y-m-d H:i:s');
     $insertSql = "INSERT INTO test_table (test_data) VALUES (?)";
-    $stmt = $conn->prepare($insertSql);
+    $stmt = mysqli_prepare($conn, $insertSql);
     
     if (!$stmt) {
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to prepare statement: ' . $conn->error,
+            'message' => 'Failed to prepare statement: ' . mysqli_error($conn),
             'sql' => $insertSql
         ]);
         exit;
     }
     
-    $stmt->bind_param("s", $testData);
+    mysqli_stmt_bind_param($stmt, "s", $testData);
     
-    if (!$stmt->execute()) {
+    if (!mysqli_stmt_execute($stmt)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Failed to insert test data: ' . $stmt->error
+            'message' => 'Failed to insert test data: ' . mysqli_stmt_error($stmt)
         ]);
         exit;
     }
