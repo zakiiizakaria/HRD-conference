@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration for Hostinger
-$host = "127.0.0.1";  // From your phpMyAdmin screenshot
+$host = "localhost";  // Changed from 127.0.0.1 to localhost
 $username = "u197368543_root"; // From your database users screenshot
 $password = "Hrd_conference2025";
 $database = "u197368543_hrd_conference"; // From your database name screenshot

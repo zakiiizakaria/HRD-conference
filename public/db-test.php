@@ -10,7 +10,7 @@ header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
-$host = "127.0.0.1";
+$host = "localhost";
 $username = "u197368543_root";
 $password = "Hrd_conference2025";
 $database = "u197368543_hrd_conference";
