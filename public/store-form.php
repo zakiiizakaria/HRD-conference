@@ -25,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration for Hostinger
-$host = "localhost";  // Changed from 127.0.0.1 to localhost
-$username = "u197368543_root"; // From your database users screenshot
-$password = "Hrd_conference2025";
-$database = "u197368543_hrd_conference"; // From your database name screenshot
+$host = "localhost";  // Using localhost for Hostinger
+$username = "u197368543_hrd"; // From your new database user screenshot
+$password = "7rR/bOAyE"; // Updated password
+$database = "u197368543_hrd_db"; // From your new database name screenshot
 
 // Function to generate a unique ID
 function generateUniqueId() {

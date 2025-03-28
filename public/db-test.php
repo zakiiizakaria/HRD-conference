@@ -11,9 +11,9 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
 $host = "localhost";
-$username = "u197368543_root";
-$password = "Hrd_conference2025";
-$database = "u197368543_hrd_conference";
+$username = "u197368543_hrd";
+$password = "7rR/bOAyE";
+$database = "u197368543_hrd_db";
 
 // Test database connection
 try {
