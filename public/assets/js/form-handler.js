@@ -87,7 +87,7 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_ubqmm7y', // Your EmailJS template ID
+                'template_gexdiiq', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -218,7 +218,7 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_ubqmm7y', // Your EmailJS template ID
+                'template_gexdiiq', // Your EmailJS template ID
                 {
                     from_name: fullName,
                     from_email: email,
@@ -353,7 +353,7 @@ function initFormHandlers() {
             // First send email using EmailJS service
             window.emailjs.send(
                 'service_pty2v88', // Your EmailJS service ID
-                'template_ubqmm7y', // Your EmailJS template ID for registration
+                'template_gexdiiq', // Your EmailJS template ID for registration
                 {
                     from_name: fullName,
                     from_email: email,
