@@ -32,7 +32,56 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Send email using EmailJS service backup
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('interest', interest);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-sponsorship.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
+                
+            console.log('Submitting form to:', scriptUrl);
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Database response:', data);
+                
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    sponsorForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+            
+            /* Commented out EmailJS code for testing database only
+            // Send email using EmailJS service
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
                 'template_etjjplb', // Your EmailJS template ID
@@ -49,15 +98,28 @@ function initFormHandlers() {
             )
             .then(function(response) {
                 console.log('Email sent successfully!', response.status, response.text);
-                showSuccessMessage(sponsorForm, 'Your form has been submitted successfully!');
+                
+                // Show success message
+                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted. We will contact you shortly.');
+                
+                // Reset form
+                sponsorForm.reset();
+                
+                // Reset button state
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, function(error) {
-                console.log('Email sending failed...', error);
-                showErrorMessage(sponsorForm);
+            })
+            .catch(function(error) {
+                console.error('Email sending failed:', error);
+                
+                // Show error message
+                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
+                
+                // Reset button state
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
+            */
         });
     }
 
