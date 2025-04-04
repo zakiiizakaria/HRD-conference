@@ -130,11 +130,11 @@ function initFormHandlers() {
             e.preventDefault();
             
             // Get form data
-            const fullName = speakingForm.querySelector('input[name="fullName"]').value;
-            const email = speakingForm.querySelector('input[name="email"]').value;
-            const company = speakingForm.querySelector('input[name="company"]').value;
-            const jobTitle = speakingForm.querySelector('input[name="jobTitle"]').value;
-            const contactNumber = speakingForm.querySelector('input[name="contactNumber"]').value;
+            const fullName = speakingForm.querySelector('input[placeholder="Full Name"]').value;
+            const email = speakingForm.querySelector('input[placeholder="Email Address"]').value;
+            const company = speakingForm.querySelector('input[placeholder="Company Name"]').value;
+            const jobTitle = speakingForm.querySelector('input[placeholder="Job Title"]').value;
+            const contactNumber = speakingForm.querySelector('input[placeholder="Contact Number"]').value;
             
             // Show loading state
             const submitBtn = speakingForm.querySelector('button[type="submit"]');
@@ -142,6 +142,54 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-speaker.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
+                
+            console.log('Submitting speaker form to:', scriptUrl);
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Database response:', data);
+                
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    speakingForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+            
+            /* Commented out EmailJS code for testing database only
             // Send email using EmailJS service backup
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
@@ -167,6 +215,7 @@ function initFormHandlers() {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
+            */
         });
     }
     
@@ -190,6 +239,55 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('promoCode', promoCode);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-registration.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
+                
+            console.log('Submitting registration form to:', scriptUrl);
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Database response:', data);
+                
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    registrationForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+            
+            /* Commented out EmailJS code for testing database only
             // Send email using EmailJS service backup
             window.emailjs.send(
                 'service_wshzlmp', // Your EmailJS service ID
@@ -202,12 +300,13 @@ function initFormHandlers() {
                     company: company,
                     job_title: jobTitle,
                     contact_number: contactNumber,
-                    promo_code: promoCode
+                    promo_code: promoCode || 'None'
                 }
             )
             .then(function(response) {
                 console.log('Email sent successfully!', response.status, response.text);
-                showSuccessMessage(registrationForm, 'Your form has been submitted successfully!');
+                showSuccessMessage(registrationForm, 'Your registration has been submitted successfully!');
+                registrationForm.reset();
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             }, function(error) {
@@ -216,6 +315,7 @@ function initFormHandlers() {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
+            */
         });
     }
     
