@@ -3147,9 +3147,6 @@
     <!--====== Slick js ======-->
     <script src="assets/js/slick.min.js"></script>
 
-    <!--====== Magnific Popup js ======-->
-    <script src="assets/js/jquery.magnific-popup.min.js"></script>
-
     <!--====== Scrolling Nav js ======-->
     <script src="assets/js/jquery.easing.min.js"></script>
     <script src="assets/js/scrolling-nav.js"></script>
@@ -3211,6 +3208,50 @@
         document.addEventListener('scroll', function() {
           lazyLoader.update();
         });
+        
+        // Dynamically load Magnific Popup only when needed
+        const galleryLinks = document.querySelectorAll('.gallery-overlay a');
+        let magnificPopupLoaded = false;
+        
+        function loadMagnificPopup(callback) {
+          if (magnificPopupLoaded) {
+            if (callback) callback();
+            return;
+          }
+          
+          const script = document.createElement('script');
+          script.src = 'assets/js/jquery.magnific-popup.min.js';
+          script.onload = function() {
+            magnificPopupLoaded = true;
+            if (callback) callback();
+          };
+          document.body.appendChild(script);
+        }
+        
+        // Add click event listeners to gallery items
+        galleryLinks.forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            loadMagnificPopup(function() {
+              // Initialize Magnific Popup after it's loaded
+              $(link).magnificPopup({
+                type: 'image',
+                gallery: {
+                  enabled: true
+                }
+              }).magnificPopup('open');
+            });
+          });
+        });
+        
+        // Preload Magnific Popup when user hovers over gallery section
+        const gallerySection = document.querySelector('.bento-gallery');
+        if (gallerySection) {
+          gallerySection.addEventListener('mouseenter', function() {
+            loadMagnificPopup();
+          });
+        }
       });
     </script>
 
