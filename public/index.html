@@ -110,6 +110,24 @@
         display: inline-block;
         margin-right: 10px;
       }
+      /* Lazy loading styles */
+      .lazy-background {
+        background-color: #f8f9fa; /* Light placeholder color */
+        transition: background-image 0.5s ease-in-out;
+      }
+      
+      .loaded-background {
+        background-color: transparent;
+      }
+      
+      .lazy {
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+      
+      .lazy.loaded {
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
@@ -316,10 +334,8 @@
       <div class="home-background">
         <div
         id="home"
-        class="header-content-area bg_cover d-flex align-items-center"
-        style="
-          background-image: url(assets/images/conference/brochure/broshure_images/ai_brochure_3.png);
-        "
+        class="header-content-area bg_cover d-flex align-items-center lazy-background"
+        data-bg="assets/images/conference/brochure/broshure_images/ai_brochure_3.png"
       >
         <div class="container">
           <div class="row justify-content-center">
@@ -431,9 +447,8 @@
         <div class="container">
           <div class="row justify-content-center">
             <div class="col-lg-8">
-              <div
-                class="section-title text-center mb-75 wow fadeInUp"
-                data-wow-delay="0.2s"
+              <div class="section-title text-center mb-75 wow fadeInUp"
+              data-wow-delay="0.2s"
               >
                 <h2 class="mb-15">Key Main Themes</h2>
                 <p>
@@ -1240,7 +1255,7 @@
                   <img
                     data-src="assets/images/conference/speaker_company_logo/Nestle_logo.png"
                     alt="Nestlé"
-                    class="lazy"
+                    class="lazy company-logo"
                   />
                 </div>
               </div>
@@ -2616,8 +2631,9 @@
           <div class="col-lg-2 col-md-3 col-sm-4 col-6">
             <div class="client-logo mt-40">
               <img
-                src="assets/images/conference/past_sponsor/past_sponsor_3.png"
+                data-src="assets/images/conference/past_sponsor/past_sponsor_3.png"
                 alt="Client"
+                class="lazy"
               />
             </div>
           </div>
@@ -2916,10 +2932,8 @@
           <div class="bento-cell bento-cell-video">
             <div class="video-feature-container">
               <div
-                class="video-thumbnail"
-                style="
-                  background-image: url('assets/images/conference/brochure/previous_series/previous_10.jpg');
-                "
+                class="video-thumbnail lazy-background"
+                data-bg="assets/images/conference/brochure/previous_series/previous_10.jpg"
               >
                 <a
                   href="https://www.youtube.com/watch?v=rGR1ENje0Ng&t=138s"
@@ -3158,7 +3172,7 @@
     <!-- Initialize Lazy Loading -->
     <script>
       document.addEventListener("DOMContentLoaded", function() {
-        // Initialize lazy loading
+        // Initialize lazy loading for images
         const lazyLoader = new LazyLoad({
           elements_selector: ".lazy",
           threshold: 300,
@@ -3166,6 +3180,32 @@
             element.classList.add('loaded');
           }
         });
+        
+        // Initialize lazy loading for background images
+        const lazyBackgrounds = document.querySelectorAll(".lazy-background");
+        
+        if ("IntersectionObserver" in window) {
+          let lazyBackgroundObserver = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(function(entry) {
+              if (entry.isIntersecting) {
+                const lazyBackground = entry.target;
+                lazyBackground.style.backgroundImage = `url(${lazyBackground.dataset.bg})`;
+                lazyBackgroundObserver.unobserve(lazyBackground);
+                lazyBackground.classList.add('loaded-background');
+              }
+            });
+          });
+          
+          lazyBackgrounds.forEach(function(lazyBackground) {
+            lazyBackgroundObserver.observe(lazyBackground);
+          });
+        } else {
+          // Fallback for browsers without IntersectionObserver support
+          lazyBackgrounds.forEach(function(lazyBackground) {
+            lazyBackground.style.backgroundImage = `url(${lazyBackground.dataset.bg})`;
+            lazyBackground.classList.add('loaded-background');
+          });
+        }
         
         // Update lazy loading when new content might be loaded
         document.addEventListener('scroll', function() {
