@@ -75,6 +75,7 @@
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="stylesheet" href="assets/css/speaker-styles.css" />
     <link rel="stylesheet" href="assets/css/x-icon.css" />
+    <link rel="stylesheet" href="assets/css/analytics-display.css" />
     
     <!-- EmailJS Library -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -3090,21 +3091,65 @@
       </div>
 
       <div
-        class="footer-copyright"
-        style="padding-top: 10px;"
-      >
-        <div class="container">
+      class="footer-copyright"
+      style="padding-top: 10px;"
+    >
+      <div class="container">
+        <!-- Simple Analytics Section (Hidden by default) -->
+        <div id="simple-analytics" style="display: none; margin-bottom: 20px;">
           <div class="row">
             <div class="col-lg-12">
-              <div class="copyright text-center">
-                <p class="text text-white">
-                  &copy; Copyright 2025 - Room of Leader.
-                </p>
+              <div class="analytics-container">
+                <h5 class="text-center mb-3 text-white">Visitor Statistics</h5>
+                <div class="row text-center">
+                  <div class="col">
+                    <div class="stat-box">
+                      <h6>Today</h6>
+                      <div class="stat-value">2</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="stat-box">
+                      <h6>Yesterday</h6>
+                      <div class="stat-value">7</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="stat-box">
+                      <h6>Last 7 days</h6>
+                      <div class="stat-value">202</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="stat-box">
+                      <h6>Last 30 days</h6>
+                      <div class="stat-value">211</div>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="stat-box">
+                      <h6>All</h6>
+                      <div class="stat-value">211</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <!-- End Simple Analytics Section -->
+        
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="copyright text-center">
+              <p class="text text-white" id="copyright-text" style="cursor: pointer;">
+                &copy; Copyright 2025 - Room of Leader.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
     </section>
 
     <!--====== FOOTER PART ENDS ======-->
@@ -3253,6 +3298,22 @@
           });
         }
       });
+    </script>
+
+    <script>
+       // Toggle analytics section when copyright text is clicked
+       const copyrightText = document.getElementById('copyright-text');
+        const analyticsSection = document.getElementById('simple-analytics');
+        
+        if (copyrightText && analyticsSection) {
+          copyrightText.addEventListener('click', function() {
+            if (analyticsSection.style.display === 'none') {
+              analyticsSection.style.display = 'block';
+            } else {
+              analyticsSection.style.display = 'none';
+            }
+          });
+        }
     </script>
 
     <!-- Venue Modal Script -->
