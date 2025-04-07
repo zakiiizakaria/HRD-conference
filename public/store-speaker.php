@@ -140,9 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminEmailHtml = createSpeakerEmailTemplate($formData);
         $adminEmailResult = sendEmail(
             [
-                'zakihelmi1997@gmail.com',
-                'helmizaki1997@gmail.com',
-                'helmizakaria1997@gmail.com'
+                'Farah@roomofleaders.com',
+                'Abdul@roomofleaders.com',
+                'adam@roomofleaders.com'
             ],
             'HRD Conference Admin',
             'New Speaker Application from ' . $fullName,

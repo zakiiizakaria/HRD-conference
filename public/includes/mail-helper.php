@@ -213,8 +213,6 @@ function createSpeakerEmailTemplate($data) {
     $company = htmlspecialchars($data['company'] ?? '');
     $jobTitle = htmlspecialchars($data['jobTitle'] ?? '');
     $contactNumber = htmlspecialchars($data['contactNumber'] ?? '');
-    $topic = htmlspecialchars($data['topic'] ?? '');
-    $bio = htmlspecialchars($data['bio'] ?? '');
     
     return <<<HTML
     <!DOCTYPE html>
@@ -258,14 +256,6 @@ function createSpeakerEmailTemplate($data) {
                     <tr>
                         <td>Contact Number:</td>
                         <td>$contactNumber</td>
-                    </tr>
-                    <tr>
-                        <td>Proposed Topic:</td>
-                        <td>$topic</td>
-                    </tr>
-                    <tr>
-                        <td>Speaker Bio:</td>
-                        <td>$bio</td>
                     </tr>
                 </table>
                 
