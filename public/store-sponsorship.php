@@ -1,7 +1,7 @@
 <?php
 /**
- * Sponsorship Form Database Handler
- * Stores form submissions in the database
+ * Sponsorship Form Handler
+ * Stores form submissions in the database and sends email notifications
  */
 
 // Enable error reporting for debugging
@@ -57,6 +57,9 @@ $response = [
 $response['debug']['request_method'] = $_SERVER['REQUEST_METHOD'];
 $response['debug']['post_data'] = $_POST;
 $response['debug']['environment'] = $isLocalEnvironment ? 'local' : 'production';
+
+// Include the mail helper
+require_once __DIR__ . '/includes/mail-helper.php';
 
 // Only process POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -114,8 +117,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $response['debug']['insert'] = "Data inserted successfully";
         
+        // Send email notification to admin
+        $formData = [
+            'fullName' => $fullName,
+            'email' => $email,
+            'company' => $company,
+            'jobTitle' => $jobTitle,
+            'contactNumber' => $contactNumber,
+            'interest' => $interest
+        ];
+        
+        $adminEmailHtml = createSponsorshipEmailTemplate($formData);
+        $adminEmailResult = sendEmail(
+            [
+                'zakihelmi1997@gmail.com',
+                'helmizaki1997@gmail.com',
+                'helmizakaria1997@gmail.com'
+            ],
+            'HRD Conference Admin',
+            'New Sponsorship Inquiry from ' . $fullName,
+            $adminEmailHtml,
+            '',
+            ['email' => $email, 'name' => $fullName]
+        );
+        
+        // Send confirmation email to user
+        $userEmailHtml = createConfirmationEmailTemplate('sponsorship', $formData);
+        $userEmailResult = sendEmail(
+            $email,
+            $fullName,
+            'HRD Conference - Sponsorship Inquiry Confirmation',
+            $userEmailHtml
+        );
+        
+        $response['debug']['admin_email'] = $adminEmailResult;
+        $response['debug']['user_email'] = $userEmailResult;
+        
         $response['success'] = true;
-        $response['message'] = 'Sponsorship inquiry successfully stored in database';
+        $response['message'] = 'Sponsorship inquiry successfully stored in database and email notifications sent';
         $response['data'] = [
             'id' => $pdo->lastInsertId(),
             'fullName' => $fullName,
