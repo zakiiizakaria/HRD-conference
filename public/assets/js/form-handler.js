@@ -10,7 +10,6 @@ function isEmailJSLoaded() {
 
 // Function to handle form submissions
 function initFormHandlers() {
-    console.log('Initializing form handlers');
     
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
@@ -47,8 +46,6 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
                 
-            console.log('Submitting form to:', scriptUrl);
-                
             fetch(scriptUrl, {
                 method: 'POST',
                 body: formData,
@@ -57,7 +54,6 @@ function initFormHandlers() {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Database response:', data);
                 
                 if (data.success) {
                     // Show success message
@@ -71,7 +67,6 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
             })
             .finally(() => {
@@ -79,47 +74,6 @@ function initFormHandlers() {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
-            
-            /* Commented out EmailJS code for testing database only
-            // Send email using EmailJS service
-            window.emailjs.send(
-                'service_wshzlmp', // Your EmailJS service ID
-                'template_etjjplb', // Your EmailJS template ID
-                {
-                    from_name: fullName,
-                    from_email: email,
-                    subject: 'New Sponsorship Inquiry from ' + fullName,
-                    email_header: 'New Sponsorship Inquiry',
-                    company: company,
-                    job_title: jobTitle,
-                    contact_number: contactNumber,
-                    interest: interest
-                }
-            )
-            .then(function(response) {
-                console.log('Email sent successfully!', response.status, response.text);
-                
-                // Show success message
-                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted. We will contact you shortly.');
-                
-                // Reset form
-                sponsorForm.reset();
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            })
-            .catch(function(error) {
-                console.error('Email sending failed:', error);
-                
-                // Show error message
-                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
-            */
         });
     }
 
@@ -156,8 +110,6 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
                 
-            console.log('Submitting speaker form to:', scriptUrl);
-                
             fetch(scriptUrl, {
                 method: 'POST',
                 body: formData,
@@ -166,8 +118,6 @@ function initFormHandlers() {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Database response:', data);
-                
                 if (data.success) {
                     // Show success message
                     showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
@@ -188,34 +138,6 @@ function initFormHandlers() {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
-            
-            /* Commented out EmailJS code for testing database only
-            // Send email using EmailJS service backup
-            window.emailjs.send(
-                'service_wshzlmp', // Your EmailJS service ID
-                'template_etjjplb', // Your EmailJS template ID
-                {
-                    from_name: fullName,
-                    from_email: email,
-                    subject: 'New Speaker Proposal from ' + fullName,
-                    email_header: 'New Speaker Proposal',
-                    company: company,
-                    job_title: jobTitle,
-                    contact_number: contactNumber
-                }
-            )
-            .then(function(response) {
-                console.log('Email sent successfully!', response.status, response.text);
-                showSuccessMessage(speakingForm, 'Your form has been submitted successfully!');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            }, function(error) {
-                console.log('Email sending failed...', error);
-                showErrorMessage(speakingForm);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
-            */
         });
     }
     
@@ -254,8 +176,6 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
                 
-            console.log('Submitting registration form to:', scriptUrl);
-                
             fetch(scriptUrl, {
                 method: 'POST',
                 body: formData,
@@ -264,8 +184,6 @@ function initFormHandlers() {
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Database response:', data);
-                
                 if (data.success) {
                     // Show success message
                     showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
@@ -286,36 +204,6 @@ function initFormHandlers() {
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             });
-            
-            /* Commented out EmailJS code for testing database only
-            // Send email using EmailJS service backup
-            window.emailjs.send(
-                'service_wshzlmp', // Your EmailJS service ID
-                'template_etjjplb', // Your EmailJS template ID for registration
-                {
-                    from_name: fullName,
-                    from_email: email,
-                    subject: 'New Registration from ' + fullName,
-                    email_header: 'New Registration',
-                    company: company,
-                    job_title: jobTitle,
-                    contact_number: contactNumber,
-                    promo_code: promoCode || 'None'
-                }
-            )
-            .then(function(response) {
-                console.log('Email sent successfully!', response.status, response.text);
-                showSuccessMessage(registrationForm, 'Your registration has been submitted successfully!');
-                registrationForm.reset();
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            }, function(error) {
-                console.log('Email sending failed...', error);
-                showErrorMessage(registrationForm);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
-            */
         });
     }
     
@@ -373,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initFormHandlers();
     } else {
         // If not loaded, wait for it to load
-        console.log('EmailJS not loaded yet, waiting...');
         
         // Check every 100ms for EmailJS to be loaded (up to 5 seconds)
         let attempts = 0;
@@ -387,7 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 initFormHandlers();
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                console.error('EmailJS failed to load after 5 seconds. Form functionality may be limited.');
                 
                 // Add error message to forms
                 const sponsorForm = document.getElementById('sponsor-form');
