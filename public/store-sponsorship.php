@@ -130,9 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminEmailHtml = createSponsorshipEmailTemplate($formData);
         $adminEmailResult = sendEmail(
             [
-                'Farah@roomofleaders.com',
-                'Abdul@roomofleaders.com',
-                'adam@roomofleaders.com'
+                'admin@roomofleaders.com',
+                'abdul@roomofleaders.com',
             ],
             'HRD Conference Admin',
             'New Sponsorship Inquiry from ' . $fullName,
