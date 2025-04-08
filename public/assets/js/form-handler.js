@@ -1,11 +1,13 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
- * Handles form submissions using EmailJS
+ * Handles form submissions using PHP backend
  */
 
-// Function to check if EmailJS is loaded
-function isEmailJSLoaded() {
-    return typeof window.emailjs !== 'undefined';
+// Initialize form handlers immediately
+function initializeFormHandlers() {
+    document.addEventListener('DOMContentLoaded', function() {
+        initFormHandlers();
+    });
 }
 
 // Function to handle form submissions
@@ -254,52 +256,5 @@ function initFormHandlers() {
     }
 }
 
-// Wait for the document to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if EmailJS is already loaded
-    if (isEmailJSLoaded()) {
-        initFormHandlers();
-    } else {
-        // If not loaded, wait for it to load
-        
-        // Check every 100ms for EmailJS to be loaded (up to 5 seconds)
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds
-        
-        const checkInterval = setInterval(function() {
-            attempts++;
-            
-            if (isEmailJSLoaded()) {
-                clearInterval(checkInterval);
-                initFormHandlers();
-            } else if (attempts >= maxAttempts) {
-                clearInterval(checkInterval);
-                
-                // Add error message to forms
-                const sponsorForm = document.getElementById('sponsor-form');
-                if (sponsorForm) {
-                    const errorMessage = document.createElement('div');
-                    errorMessage.className = 'form-message error-message';
-                    errorMessage.innerHTML = '<i class="lni-warning"></i> Email service is not available. Please try again later or contact us directly.';
-                    sponsorForm.parentNode.insertBefore(errorMessage, sponsorForm.nextSibling);
-                }
-                
-                const speakingForm = document.getElementById('speaking-form');
-                if (speakingForm) {
-                    const errorMessage = document.createElement('div');
-                    errorMessage.className = 'form-message error-message';
-                    errorMessage.innerHTML = '<i class="lni-warning"></i> Email service is not available. Please try again later or contact us directly.';
-                    speakingForm.parentNode.insertBefore(errorMessage, speakingForm.nextSibling);
-                }
-                
-                const registrationForm = document.getElementById('pricing-form');
-                if (registrationForm) {
-                    const errorMessage = document.createElement('div');
-                    errorMessage.className = 'form-message error-message';
-                    errorMessage.innerHTML = '<i class="lni-warning"></i> Email service is not available. Please try again later or contact us directly.';
-                    registrationForm.parentNode.insertBefore(errorMessage, registrationForm.nextSibling);
-                }
-            }
-        }, 100);
-    }
-});
+// Initialize form handlers
+initializeFormHandlers();
