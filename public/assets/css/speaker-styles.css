@@ -258,6 +258,10 @@
   color: #888;
 }
 
+.speaker-modal-info .speaker-bio {
+  text-align: justify;
+}
+
 .speaker-modal-info .speaker-bio h5,
 .speaker-modal-info .speaker-bio p {
   font-size: 15px;
