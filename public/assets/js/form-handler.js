@@ -5,6 +5,25 @@
 
 // Initialize form handlers immediately
 function initializeFormHandlers() {
+    // Clear any potential cached EmailJS data
+    if (window.localStorage) {
+        // Remove any EmailJS related items from localStorage
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes('emailjs') || key.includes('email-js')) {
+                localStorage.removeItem(key);
+            }
+        });
+    }
+    
+    // Clear any potential service worker cache
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         initFormHandlers();
     });
@@ -52,7 +71,13 @@ function initFormHandlers() {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
-                mode: 'cors'
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             .then(response => response.json())
             .then(data => {
@@ -69,7 +94,8 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
+                console.error('Form submission error:', error);
+                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
                 // Reset button state
@@ -116,7 +142,13 @@ function initFormHandlers() {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
-                mode: 'cors'
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             .then(response => response.json())
             .then(data => {
@@ -132,8 +164,8 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again.');
+                console.error('Form submission error:', error);
+                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
                 // Reset button state
@@ -182,7 +214,13 @@ function initFormHandlers() {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
-                mode: 'cors'
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             .then(response => response.json())
             .then(data => {
@@ -198,8 +236,8 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again.');
+                console.error('Form submission error:', error);
+                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
                 // Reset button state
