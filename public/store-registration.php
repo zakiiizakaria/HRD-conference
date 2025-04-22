@@ -9,6 +9,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Enable custom error logging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/form_errors.log');
+
+// Log form submission attempt
+$timestamp = date('Y-m-d H:i:s');
+error_log("[$timestamp] Registration form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 

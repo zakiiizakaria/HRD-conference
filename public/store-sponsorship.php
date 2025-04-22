@@ -9,6 +9,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Enable custom error logging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/form_errors.log');
+
+// Log form submission attempt
+error_log("[" . date('Y-m-d H:i:s') . "] Form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
@@ -170,15 +177,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['debug']['error_type'] = 'PDOException';
         $response['debug']['error_message'] = $e->getMessage();
         $response['debug']['error_trace'] = $e->getTraceAsString();
+        
+        // Log detailed error information
+        error_log("[" . date('Y-m-d H:i:s') . "] PDO Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     } catch (InvalidArgumentException $e) {
         $response['message'] = $e->getMessage();
         $response['debug']['error_type'] = 'InvalidArgumentException';
         $response['debug']['error_message'] = $e->getMessage();
+        
+        // Log validation error
+        error_log("[" . date('Y-m-d H:i:s') . "] Validation Error: " . $e->getMessage());
     } catch (Exception $e) {
         $response['message'] = 'Unexpected error: ' . $e->getMessage();
         $response['debug']['error_type'] = 'Exception';
         $response['debug']['error_message'] = $e->getMessage();
         $response['debug']['error_trace'] = $e->getTraceAsString();
+        
+        // Log general exception
+        error_log("[" . date('Y-m-d H:i:s') . "] Unexpected Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     }
 } else {
     $response['message'] = 'Invalid request method';
