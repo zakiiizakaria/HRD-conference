@@ -246,8 +246,8 @@ if (isset($_POST['redirect_url']) && !empty($_POST['redirect_url'])) {
         $redirectUrl .= (strpos($redirectUrl, '?') !== false ? '&' : '?') . 'error=' . urlencode($response['message']);
     }
     
-    // Log the redirect
-    error_log("[" . date(TIMESTAMP_FORMAT) . "] Redirecting to: $redirectUrl");
+    // Skip detailed logging for redirects to improve performance
+    // Only log critical errors
     
     // Redirect
     header("Location: $redirectUrl");

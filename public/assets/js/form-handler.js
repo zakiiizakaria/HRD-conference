@@ -108,8 +108,7 @@ function initFormHandlers() {
                     // Add to document and submit
                     document.body.appendChild(directForm);
                     
-                    // Show message to user
-                    alert('Submitting your form directly. Please wait...');
+                    // No alert to avoid page navigation interruption
                     
                     // Submit the form directly
                     directForm.submit();
@@ -122,7 +121,7 @@ function initFormHandlers() {
                 showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 45000); // Extended timeout to 45 seconds for mobile
+            }, 15000); // Reduced timeout to 15 seconds for faster fallback
             
             // Listen for iframe load event
             iframe.onload = function() {
@@ -316,8 +315,7 @@ function initFormHandlers() {
                     // Add to document and submit
                     document.body.appendChild(directForm);
                     
-                    // Show message to user
-                    alert('Submitting your form directly. Please wait...');
+                    // No alert to avoid page navigation interruption
                     
                     // Submit the form directly
                     directForm.submit();
@@ -330,7 +328,7 @@ function initFormHandlers() {
                 showErrorMessage(speakingForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 45000); // Extended timeout to 45 seconds for mobile
+            }, 15000); // Reduced timeout to 15 seconds for faster fallback
             
             // Listen for iframe load event
             iframe.onload = function() {
@@ -526,8 +524,7 @@ function initFormHandlers() {
                     // Add to document and submit
                     document.body.appendChild(directForm);
                     
-                    // Show message to user
-                    alert('Submitting your form directly. Please wait...');
+                    // No alert to avoid page navigation interruption
                     
                     // Submit the form directly
                     directForm.submit();
@@ -540,7 +537,7 @@ function initFormHandlers() {
                 showErrorMessage(registrationForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 45000); // Extended timeout to 45 seconds for mobile
+            }, 15000); // Reduced timeout to 15 seconds for faster fallback
             
             // Listen for iframe load event
             iframe.onload = function() {
