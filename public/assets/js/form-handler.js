@@ -1,7 +1,7 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
  * Handles form submissions using PHP backend
- * With special handling for iPhone SE and older iPhones
+ * With improved compatibility for all devices including iOS
  */
 
 // Initialize form handlers immediately
@@ -34,132 +34,95 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create form data for AJAX request
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
-            formData.append('interest', interest);
+            // Create a hidden iframe for form submission
+            let iframe = document.getElementById('hidden-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'hidden-iframe';
+                iframe.name = 'hidden-iframe';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
             
-            // Send data to PHP script for database storage
+            // Create a temporary form for submission
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.target = 'hidden-iframe';
+            
+            // Set the form action based on environment
             const isProduction = window.location.hostname === 'hrdconference.com';
-            const scriptUrl = isProduction 
+            tempForm.action = isProduction 
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
-                
-            // Add detailed debug info
-            formData.append('device_info', navigator.userAgent);
+            
+            // Add form fields
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                tempForm.appendChild(input);
+            };
+            
+            // Add all form fields
+            addField('fullName', fullName);
+            addField('email', email);
+            addField('company', company);
+            addField('jobTitle', jobTitle);
+            addField('contactNumber', contactNumber);
+            addField('interest', interest);
+            addField('device_info', navigator.userAgent);
             
             // Add network information if available
             if (navigator.connection) {
-                formData.append('network_type', navigator.connection.type || 'unknown');
-                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
-                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+                addField('network_type', navigator.connection.type || 'unknown');
+                addField('network_downlink', navigator.connection.downlink || 'unknown');
+                addField('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Detect if this is an iPhone SE or older iPhone
-            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                (navigator.userAgent.includes('iPhone OS 9') || 
-                 navigator.userAgent.includes('iPhone OS 10') || 
-                 navigator.userAgent.includes('iPhone OS 11') || 
-                 navigator.userAgent.includes('iPhone OS 12') || 
-                 navigator.userAgent.includes('iPhone OS 13') ||
-                 navigator.userAgent.includes('iPhone SE'));
+            // Add the form to the document
+            document.body.appendChild(tempForm);
             
-            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
-            if (isOlderIPhone) {
-                // Using Fetch API for iPhone SE
+            // Set up a timeout for form submission
+            const submissionTimeout = setTimeout(() => {
+                showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Please try again later.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }, 30000); // 30 seconds timeout
+            
+            // Listen for iframe load event
+            iframe.onload = function() {
+                clearTimeout(submissionTimeout);
                 
-                // Use Fetch API for iPhone SE
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    redirect: 'follow',
-                    referrerPolicy: 'no-referrer'
-                })
-                .then(response => {
-
-                    return response.json();
-                })
-                .then(data => {
-
-                    if (data.success) {
-                        // Show success message
-                        showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
-                        
-                        // Reset form
-                        sponsorForm.reset();
-                    } else {
-                        // Show error message
-                        showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
-                    }
+                try {
+                    // Try to get response from iframe
+                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
                     
-                    // Reset button state
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-
-                    
-                    // Show iOS device compatibility message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(sponsorForm, deviceMessage);
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
-            } else {
-                // Use XMLHttpRequest for modern devices
-                const xhr = new XMLHttpRequest();
-                
-                // Set up event listeners
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                if (data.success) {
-                                    // Show success message
-                                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
-                                    
-                                    // Reset form
-                                    sponsorForm.reset();
-                                } else {
-                                    // Show error message
-                                    showErrorMessage(sponsorForm, 'There was a problem submitting your inquiry. Please try again later.');
-                                }
-                            } catch (e) {
-                                showErrorMessage(sponsorForm, 'There was a problem processing your submission. Please try again later.');
+                    if (responseText) {
+                        try {
+                            const response = JSON.parse(responseText);
+                            
+                            if (response.success) {
+                                // Show success message
+                                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                                sponsorForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(sponsorForm, 'There was a problem submitting your inquiry. Please try again later.');
                             }
-                        } else {
-                            showErrorMessage(sponsorForm, 'We encountered a server issue while processing your submission. Please try again later.');
+                        } catch (e) {
+                            // JSON parse error
+                            showErrorMessage(sponsorForm, 'There was a problem processing your submission. Please try again later.');
                         }
-                        
-                        // Reset button state
-                        submitBtn.innerHTML = originalBtnText;
-                        submitBtn.disabled = false;
+                    } else {
+                        // Empty response
+                        showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
                     }
-                };
-                
-                xhr.onerror = function(e) {
-                    // Check if this is an iPhone or iOS device
+                } catch (e) {
+                    // Cross-origin error or other issue
                     if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show a polite message for iOS devices
+                        // Show iOS device message
                         const deviceMessage = `
                             <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
                                 <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
@@ -174,41 +137,56 @@ function initFormHandlers() {
                         `;
                         showErrorMessage(sponsorForm, deviceMessage);
                     } else {
-                        showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.');
+                        showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
                     }
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                xhr.ontimeout = function() {
-                    showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                // Add additional headers and settings for better mobile compatibility
-                try {
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 30000; // 30 seconds timeout
-                    
-                    // Add a specific header to identify mobile submissions
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    
-
-                    
-                    // Send the form data
-                    xhr.send(formData);
-                    
-
-                } catch (e) {
-                    // Catch any errors that occur during request setup
-
-                    showErrorMessage(sponsorForm, 'There was a problem connecting to our server. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
                 }
-            }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Handle iframe error
+            iframe.onerror = function() {
+                clearTimeout(submissionTimeout);
+                
+                // Show error message
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                    // Show iOS device message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(sponsorForm, deviceMessage);
+                } else {
+                    showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
+                }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Submit the form
+            tempForm.submit();
         });
     }
 
@@ -231,131 +209,94 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create form data for AJAX request
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
+            // Create a hidden iframe for form submission
+            let iframe = document.getElementById('hidden-iframe-speaker');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'hidden-iframe-speaker';
+                iframe.name = 'hidden-iframe-speaker';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
             
-            // Send data to PHP script for database storage
+            // Create a temporary form for submission
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.target = 'hidden-iframe-speaker';
+            
+            // Set the form action based on environment
             const isProduction = window.location.hostname === 'hrdconference.com';
-            const scriptUrl = isProduction 
+            tempForm.action = isProduction 
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
-                
-            // Add detailed debug info
-            formData.append('device_info', navigator.userAgent);
+            
+            // Add form fields
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                tempForm.appendChild(input);
+            };
+            
+            // Add all form fields
+            addField('fullName', fullName);
+            addField('email', email);
+            addField('company', company);
+            addField('jobTitle', jobTitle);
+            addField('contactNumber', contactNumber);
+            addField('device_info', navigator.userAgent);
             
             // Add network information if available
             if (navigator.connection) {
-                formData.append('network_type', navigator.connection.type || 'unknown');
-                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
-                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+                addField('network_type', navigator.connection.type || 'unknown');
+                addField('network_downlink', navigator.connection.downlink || 'unknown');
+                addField('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Detect if this is an iPhone SE or older iPhone
-            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                (navigator.userAgent.includes('iPhone OS 9') || 
-                 navigator.userAgent.includes('iPhone OS 10') || 
-                 navigator.userAgent.includes('iPhone OS 11') || 
-                 navigator.userAgent.includes('iPhone OS 12') || 
-                 navigator.userAgent.includes('iPhone OS 13') ||
-                 navigator.userAgent.includes('iPhone SE'));
+            // Add the form to the document
+            document.body.appendChild(tempForm);
             
-            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
-            if (isOlderIPhone) {
-                // Using Fetch API for iPhone SE
+            // Set up a timeout for form submission
+            const submissionTimeout = setTimeout(() => {
+                showErrorMessage(speakingForm, 'Your request is taking longer than expected. Please try again later.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }, 30000); // 30 seconds timeout
+            
+            // Listen for iframe load event
+            iframe.onload = function() {
+                clearTimeout(submissionTimeout);
                 
-                // Use Fetch API for iPhone SE
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    redirect: 'follow',
-                    referrerPolicy: 'no-referrer'
-                })
-                .then(response => {
-
-                    return response.json();
-                })
-                .then(data => {
-
-                    if (data.success) {
-                        // Show success message
-                        showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
-                        
-                        // Reset form
-                        speakingForm.reset();
-                    } else {
-                        // Show error message
-                        showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
-                    }
+                try {
+                    // Try to get response from iframe
+                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
                     
-                    // Reset button state
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-
-                    
-                    // Show iOS device compatibility message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(speakingForm, deviceMessage);
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
-            } else {
-                // Use XMLHttpRequest for modern devices
-                const xhr = new XMLHttpRequest();
-                
-                // Set up event listeners
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                if (data.success) {
-                                    // Show success message
-                                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
-                                    
-                                    // Reset form
-                                    speakingForm.reset();
-                                } else {
-                                    // Show error message
-                                    showErrorMessage(speakingForm, 'There was a problem submitting your application. Please try again later.');
-                                }
-                            } catch (e) {
-                                showErrorMessage(speakingForm, 'There was a problem processing your submission. Please try again later.');
+                    if (responseText) {
+                        try {
+                            const response = JSON.parse(responseText);
+                            
+                            if (response.success) {
+                                // Show success message
+                                showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                                speakingForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(speakingForm, 'There was a problem submitting your application. Please try again later.');
                             }
-                        } else {
-                            showErrorMessage(speakingForm, 'We encountered a server issue while processing your submission. Please try again later.');
+                        } catch (e) {
+                            // JSON parse error
+                            showErrorMessage(speakingForm, 'There was a problem processing your submission. Please try again later.');
                         }
-                        
-                        // Reset button state
-                        submitBtn.innerHTML = originalBtnText;
-                        submitBtn.disabled = false;
+                    } else {
+                        // Empty response
+                        showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
                     }
-                };
-                
-                xhr.onerror = function(e) {
-                    // Check if this is an iPhone or iOS device
+                } catch (e) {
+                    // Cross-origin error or other issue
                     if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show a polite message for iOS devices
+                        // Show iOS device message
                         const deviceMessage = `
                             <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
                                 <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
@@ -370,41 +311,56 @@ function initFormHandlers() {
                         `;
                         showErrorMessage(speakingForm, deviceMessage);
                     } else {
-                        showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.');
+                        showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
                     }
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                xhr.ontimeout = function() {
-                    showErrorMessage(speakingForm, 'Your request is taking longer than expected. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                // Add additional headers and settings for better mobile compatibility
-                try {
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 30000; // 30 seconds timeout
-                    
-                    // Add a specific header to identify mobile submissions
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    
-
-                    
-                    // Send the form data
-                    xhr.send(formData);
-                    
-
-                } catch (e) {
-                    // Catch any errors that occur during request setup
-
-                    showErrorMessage(speakingForm, 'There was a problem connecting to our server. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
                 }
-            }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Handle iframe error
+            iframe.onerror = function() {
+                clearTimeout(submissionTimeout);
+                
+                // Show error message
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                    // Show iOS device message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(speakingForm, deviceMessage);
+                } else {
+                    showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
+                }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Submit the form
+            tempForm.submit();
         });
     }
     
@@ -428,132 +384,95 @@ function initFormHandlers() {
             submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
             submitBtn.disabled = true;
             
-            // Create form data for AJAX request
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
-            formData.append('promoCode', promoCode);
+            // Create a hidden iframe for form submission
+            let iframe = document.getElementById('hidden-iframe-registration');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'hidden-iframe-registration';
+                iframe.name = 'hidden-iframe-registration';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
             
-            // Send data to PHP script for database storage
+            // Create a temporary form for submission
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.target = 'hidden-iframe-registration';
+            
+            // Set the form action based on environment
             const isProduction = window.location.hostname === 'hrdconference.com';
-            const scriptUrl = isProduction 
+            tempForm.action = isProduction 
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
-                
-            // Add detailed debug info
-            formData.append('device_info', navigator.userAgent);
+            
+            // Add form fields
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                tempForm.appendChild(input);
+            };
+            
+            // Add all form fields
+            addField('fullName', fullName);
+            addField('email', email);
+            addField('company', company);
+            addField('jobTitle', jobTitle);
+            addField('contactNumber', contactNumber);
+            addField('promoCode', promoCode);
+            addField('device_info', navigator.userAgent);
             
             // Add network information if available
             if (navigator.connection) {
-                formData.append('network_type', navigator.connection.type || 'unknown');
-                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
-                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+                addField('network_type', navigator.connection.type || 'unknown');
+                addField('network_downlink', navigator.connection.downlink || 'unknown');
+                addField('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Detect if this is an iPhone SE or older iPhone
-            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                (navigator.userAgent.includes('iPhone OS 9') || 
-                 navigator.userAgent.includes('iPhone OS 10') || 
-                 navigator.userAgent.includes('iPhone OS 11') || 
-                 navigator.userAgent.includes('iPhone OS 12') || 
-                 navigator.userAgent.includes('iPhone OS 13') ||
-                 navigator.userAgent.includes('iPhone SE'));
+            // Add the form to the document
+            document.body.appendChild(tempForm);
             
-            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
-            if (isOlderIPhone) {
-                // Using Fetch API for iPhone SE
+            // Set up a timeout for form submission
+            const submissionTimeout = setTimeout(() => {
+                showErrorMessage(registrationForm, 'Your request is taking longer than expected. Please try again later.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }, 30000); // 30 seconds timeout
+            
+            // Listen for iframe load event
+            iframe.onload = function() {
+                clearTimeout(submissionTimeout);
                 
-                // Use Fetch API for iPhone SE
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    redirect: 'follow',
-                    referrerPolicy: 'no-referrer'
-                })
-                .then(response => {
-
-                    return response.json();
-                })
-                .then(data => {
-
-                    if (data.success) {
-                        // Show success message
-                        showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
-                        
-                        // Reset form
-                        registrationForm.reset();
-                    } else {
-                        // Show error message
-                        showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
-                    }
+                try {
+                    // Try to get response from iframe
+                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
+                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
                     
-                    // Reset button state
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                })
-                .catch(error => {
-
-                    
-                    // Show iOS device compatibility message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(registrationForm, deviceMessage);
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                });
-            } else {
-                // Use XMLHttpRequest for modern devices
-                const xhr = new XMLHttpRequest();
-                
-                // Set up event listeners
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                if (data.success) {
-                                    // Show success message
-                                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
-                                    
-                                    // Reset form
-                                    registrationForm.reset();
-                                } else {
-                                    // Show error message
-                                    showErrorMessage(registrationForm, 'There was a problem submitting your registration. Please try again later.');
-                                }
-                            } catch (e) {
-                                showErrorMessage(registrationForm, 'There was a problem processing your submission. Please try again later.');
+                    if (responseText) {
+                        try {
+                            const response = JSON.parse(responseText);
+                            
+                            if (response.success) {
+                                // Show success message
+                                showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                                registrationForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(registrationForm, 'There was a problem submitting your registration. Please try again later.');
                             }
-                        } else {
-                            showErrorMessage(registrationForm, 'We encountered a server issue while processing your submission. Please try again later.');
+                        } catch (e) {
+                            // JSON parse error
+                            showErrorMessage(registrationForm, 'There was a problem processing your submission. Please try again later.');
                         }
-                        
-                        // Reset button state
-                        submitBtn.innerHTML = originalBtnText;
-                        submitBtn.disabled = false;
+                    } else {
+                        // Empty response
+                        showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
                     }
-                };
-                
-                xhr.onerror = function(e) {
-                    // Check if this is an iPhone or iOS device
+                } catch (e) {
+                    // Cross-origin error or other issue
                     if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show a polite message for iOS devices
+                        // Show iOS device message
                         const deviceMessage = `
                             <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
                                 <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
@@ -568,41 +487,56 @@ function initFormHandlers() {
                         `;
                         showErrorMessage(registrationForm, deviceMessage);
                     } else {
-                        showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.');
+                        showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
                     }
-                    
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                xhr.ontimeout = function() {
-                    showErrorMessage(registrationForm, 'Your request is taking longer than expected. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
-                };
-                
-                // Add additional headers and settings for better mobile compatibility
-                try {
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 30000; // 30 seconds timeout
-                    
-                    // Add a specific header to identify mobile submissions
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                    
-
-                    
-                    // Send the form data
-                    xhr.send(formData);
-                    
-
-                } catch (e) {
-                    // Catch any errors that occur during request setup
-
-                    showErrorMessage(registrationForm, 'There was a problem connecting to our server. Please try again later.');
-                    submitBtn.innerHTML = originalBtnText;
-                    submitBtn.disabled = false;
                 }
-            }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Handle iframe error
+            iframe.onerror = function() {
+                clearTimeout(submissionTimeout);
+                
+                // Show error message
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                    // Show iOS device message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(registrationForm, deviceMessage);
+                } else {
+                    showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
+                }
+                
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                
+                // Clean up
+                if (tempForm && tempForm.parentNode) {
+                    tempForm.parentNode.removeChild(tempForm);
+                }
+            };
+            
+            // Submit the form
+            tempForm.submit();
         });
     }
     
