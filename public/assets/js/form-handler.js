@@ -24,6 +24,37 @@ function initializeFormHandlers() {
         });
     }
     
+    // Function to log errors to server
+    window.logErrorToServer = async function(formType, error) {
+        try {
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const logUrl = isProduction 
+                ? 'https://hrdconference.com/log-error.php' 
+                : 'http://localhost:8080/HRD-Conference/public/log-error.php';
+            
+            const errorData = {
+                formType: formType,
+                errorType: error.name || 'Unknown',
+                errorMessage: error.message || 'No message',
+                userAgent: navigator.userAgent,
+                online: navigator.onLine,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Send error data to server
+            await fetch(logUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(errorData)
+            });
+        } catch (e) {
+            // If logging fails, fallback to console
+            console.error('Error logging failed:', e);
+        }
+    };
+    
     document.addEventListener('DOMContentLoaded', function() {
         initFormHandlers();
     });
@@ -67,7 +98,23 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
                 
-            fetch(scriptUrl, {
+            // Detect if on mobile network
+            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Add retry mechanism for mobile networks
+            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                try {
+                    return await fetch(url, options);
+                } catch (err) {
+                    if (retries <= 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
+                    return fetchWithRetry(url, options, retries - 1, delay);
+                }
+            };
+            
+            // Use more robust fetch with retry for mobile
+            fetchWithRetry(scriptUrl, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
@@ -76,8 +123,11 @@ function initFormHandlers() {
                 headers: {
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                // Increase timeout for mobile networks
+                timeout: isMobileNetwork ? 30000 : 10000
             })
             .then(response => response.json())
             .then(data => {
@@ -94,7 +144,10 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Form submission error:', error);
+                // Log error to server-side log file
+                window.logErrorToServer('sponsorship', error);
+                
+                // Show generic error message to user
                 showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
@@ -138,7 +191,23 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
                 
-            fetch(scriptUrl, {
+            // Detect if on mobile network
+            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Add retry mechanism for mobile networks
+            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                try {
+                    return await fetch(url, options);
+                } catch (err) {
+                    if (retries <= 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
+                    return fetchWithRetry(url, options, retries - 1, delay);
+                }
+            };
+            
+            // Use more robust fetch with retry for mobile
+            fetchWithRetry(scriptUrl, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
@@ -147,8 +216,11 @@ function initFormHandlers() {
                 headers: {
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                // Increase timeout for mobile networks
+                timeout: isMobileNetwork ? 30000 : 10000
             })
             .then(response => response.json())
             .then(data => {
@@ -164,7 +236,10 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Form submission error:', error);
+                // Log error to server-side log file
+                window.logErrorToServer('speaker', error);
+                
+                // Show generic error message to user
                 showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
@@ -210,7 +285,23 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
                 
-            fetch(scriptUrl, {
+            // Detect if on mobile network
+            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Add retry mechanism for mobile networks
+            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+                try {
+                    return await fetch(url, options);
+                } catch (err) {
+                    if (retries <= 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
+                    return fetchWithRetry(url, options, retries - 1, delay);
+                }
+            };
+            
+            // Use more robust fetch with retry for mobile
+            fetchWithRetry(scriptUrl, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
@@ -219,8 +310,11 @@ function initFormHandlers() {
                 headers: {
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                // Increase timeout for mobile networks
+                timeout: isMobileNetwork ? 30000 : 10000
             })
             .then(response => response.json())
             .then(data => {
@@ -236,7 +330,10 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Form submission error:', error);
+                // Log error to server-side log file
+                window.logErrorToServer('registration', error);
+                
+                // Show generic error message to user
                 showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
             })
             .finally(() => {
