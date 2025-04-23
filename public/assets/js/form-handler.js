@@ -70,7 +70,7 @@ function initFormHandlers() {
             
             // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
             if (isOlderIPhone) {
-                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                // Using Fetch API for iPhone SE
                 
                 // Use Fetch API for iPhone SE
                 fetch(scriptUrl, {
@@ -82,11 +82,11 @@ function initFormHandlers() {
                     referrerPolicy: 'no-referrer'
                 })
                 .then(response => {
-                    console.log('Fetch response status:', response.status);
+
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Fetch response data:', data);
+
                     if (data.success) {
                         // Show success message
                         showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
@@ -103,8 +103,23 @@ function initFormHandlers() {
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
-                    console.error('Fetch error:', error);
-                    showErrorMessage(sponsorForm, 'Error with Fetch API: ' + error.message);
+
+                    
+                    // Show iOS device compatibility message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(sponsorForm, deviceMessage);
+                    
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -126,13 +141,13 @@ function initFormHandlers() {
                                     sponsorForm.reset();
                                 } else {
                                     // Show error message
-                                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                                    showErrorMessage(sponsorForm, 'There was a problem submitting your inquiry. Please try again later.');
                                 }
                             } catch (e) {
-                                showErrorMessage(sponsorForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                                showErrorMessage(sponsorForm, 'There was a problem processing your submission. Please try again later.');
                             }
                         } else {
-                            showErrorMessage(sponsorForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            showErrorMessage(sponsorForm, 'We encountered a server issue while processing your submission. Please try again later.');
                         }
                         
                         // Reset button state
@@ -142,23 +157,24 @@ function initFormHandlers() {
                 };
                 
                 xhr.onerror = function(e) {
-                    // Get detailed error information
-                    const errorDetails = {
-                        readyState: xhr.readyState,
-                        status: xhr.status,
-                        statusText: xhr.statusText || 'No status text',
-                        responseType: xhr.responseType,
-                        responseURL: xhr.responseURL || 'No response URL',
-                        errorEvent: e ? e.type : 'No event details'
-                    };
-                    
-                    console.error('XHR Error Details:', errorDetails);
-                    
-                    // Special handling for iPhone SE
-                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                        showErrorMessage(sponsorForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    // Check if this is an iPhone or iOS device
+                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                        // Show a polite message for iOS devices
+                        const deviceMessage = `
+                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                                <p>For the best experience, please:</p>
+                                <ul>
+                                    <li>Try using a desktop or laptop computer</li>
+                                    <li>Use a device with a newer version of iOS</li>
+                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                                </ul>
+                            </div>
+                        `;
+                        showErrorMessage(sponsorForm, deviceMessage);
                     } else {
-                        showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                        showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.');
                     }
                     
                     submitBtn.innerHTML = originalBtnText;
@@ -166,7 +182,7 @@ function initFormHandlers() {
                 };
                 
                 xhr.ontimeout = function() {
-                    showErrorMessage(sponsorForm, 'Request timed out. Please try again.');
+                    showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 };
@@ -179,18 +195,16 @@ function initFormHandlers() {
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     
-                    // Log the request details for debugging
-                    console.log('Sending request to:', scriptUrl);
+
                     
                     // Send the form data
                     xhr.send(formData);
                     
-                    // Log that the request was sent
-                    console.log('Request sent successfully');
+
                 } catch (e) {
                     // Catch any errors that occur during request setup
-                    console.error('Error setting up request:', e);
-                    showErrorMessage(sponsorForm, 'Error setting up request: ' + e.message);
+
+                    showErrorMessage(sponsorForm, 'There was a problem connecting to our server. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 }
@@ -252,7 +266,7 @@ function initFormHandlers() {
             
             // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
             if (isOlderIPhone) {
-                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                // Using Fetch API for iPhone SE
                 
                 // Use Fetch API for iPhone SE
                 fetch(scriptUrl, {
@@ -264,11 +278,11 @@ function initFormHandlers() {
                     referrerPolicy: 'no-referrer'
                 })
                 .then(response => {
-                    console.log('Fetch response status:', response.status);
+
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Fetch response data:', data);
+
                     if (data.success) {
                         // Show success message
                         showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
@@ -285,8 +299,23 @@ function initFormHandlers() {
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
-                    console.error('Fetch error:', error);
-                    showErrorMessage(speakingForm, 'Error with Fetch API: ' + error.message);
+
+                    
+                    // Show iOS device compatibility message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(speakingForm, deviceMessage);
+                    
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -308,13 +337,13 @@ function initFormHandlers() {
                                     speakingForm.reset();
                                 } else {
                                     // Show error message
-                                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                                    showErrorMessage(speakingForm, 'There was a problem submitting your application. Please try again later.');
                                 }
                             } catch (e) {
-                                showErrorMessage(speakingForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                                showErrorMessage(speakingForm, 'There was a problem processing your submission. Please try again later.');
                             }
                         } else {
-                            showErrorMessage(speakingForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            showErrorMessage(speakingForm, 'We encountered a server issue while processing your submission. Please try again later.');
                         }
                         
                         // Reset button state
@@ -324,23 +353,24 @@ function initFormHandlers() {
                 };
                 
                 xhr.onerror = function(e) {
-                    // Get detailed error information
-                    const errorDetails = {
-                        readyState: xhr.readyState,
-                        status: xhr.status,
-                        statusText: xhr.statusText || 'No status text',
-                        responseType: xhr.responseType,
-                        responseURL: xhr.responseURL || 'No response URL',
-                        errorEvent: e ? e.type : 'No event details'
-                    };
-                    
-                    console.error('XHR Error Details:', errorDetails);
-                    
-                    // Special handling for iPhone SE
-                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                        showErrorMessage(speakingForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    // Check if this is an iPhone or iOS device
+                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                        // Show a polite message for iOS devices
+                        const deviceMessage = `
+                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                                <p>For the best experience, please:</p>
+                                <ul>
+                                    <li>Try using a desktop or laptop computer</li>
+                                    <li>Use a device with a newer version of iOS</li>
+                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                                </ul>
+                            </div>
+                        `;
+                        showErrorMessage(speakingForm, deviceMessage);
                     } else {
-                        showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                        showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.');
                     }
                     
                     submitBtn.innerHTML = originalBtnText;
@@ -348,7 +378,7 @@ function initFormHandlers() {
                 };
                 
                 xhr.ontimeout = function() {
-                    showErrorMessage(speakingForm, 'Request timed out. Please try again.');
+                    showErrorMessage(speakingForm, 'Your request is taking longer than expected. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 };
@@ -361,18 +391,16 @@ function initFormHandlers() {
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     
-                    // Log the request details for debugging
-                    console.log('Sending request to:', scriptUrl);
+
                     
                     // Send the form data
                     xhr.send(formData);
                     
-                    // Log that the request was sent
-                    console.log('Request sent successfully');
+
                 } catch (e) {
                     // Catch any errors that occur during request setup
-                    console.error('Error setting up request:', e);
-                    showErrorMessage(speakingForm, 'Error setting up request: ' + e.message);
+
+                    showErrorMessage(speakingForm, 'There was a problem connecting to our server. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 }
@@ -436,7 +464,7 @@ function initFormHandlers() {
             
             // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
             if (isOlderIPhone) {
-                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                // Using Fetch API for iPhone SE
                 
                 // Use Fetch API for iPhone SE
                 fetch(scriptUrl, {
@@ -448,11 +476,11 @@ function initFormHandlers() {
                     referrerPolicy: 'no-referrer'
                 })
                 .then(response => {
-                    console.log('Fetch response status:', response.status);
+
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Fetch response data:', data);
+
                     if (data.success) {
                         // Show success message
                         showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
@@ -469,8 +497,23 @@ function initFormHandlers() {
                     submitBtn.disabled = false;
                 })
                 .catch(error => {
-                    console.error('Fetch error:', error);
-                    showErrorMessage(registrationForm, 'Error with Fetch API: ' + error.message);
+
+                    
+                    // Show iOS device compatibility message
+                    const deviceMessage = `
+                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                            <p>For the best experience, please:</p>
+                            <ul>
+                                <li>Try using a desktop or laptop computer</li>
+                                <li>Use a device with a newer version of iOS</li>
+                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                            </ul>
+                        </div>
+                    `;
+                    showErrorMessage(registrationForm, deviceMessage);
+                    
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 });
@@ -492,13 +535,13 @@ function initFormHandlers() {
                                     registrationForm.reset();
                                 } else {
                                     // Show error message
-                                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                                    showErrorMessage(registrationForm, 'There was a problem submitting your registration. Please try again later.');
                                 }
                             } catch (e) {
-                                showErrorMessage(registrationForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                                showErrorMessage(registrationForm, 'There was a problem processing your submission. Please try again later.');
                             }
                         } else {
-                            showErrorMessage(registrationForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            showErrorMessage(registrationForm, 'We encountered a server issue while processing your submission. Please try again later.');
                         }
                         
                         // Reset button state
@@ -508,23 +551,24 @@ function initFormHandlers() {
                 };
                 
                 xhr.onerror = function(e) {
-                    // Get detailed error information
-                    const errorDetails = {
-                        readyState: xhr.readyState,
-                        status: xhr.status,
-                        statusText: xhr.statusText || 'No status text',
-                        responseType: xhr.responseType,
-                        responseURL: xhr.responseURL || 'No response URL',
-                        errorEvent: e ? e.type : 'No event details'
-                    };
-                    
-                    console.error('XHR Error Details:', errorDetails);
-                    
-                    // Special handling for iPhone SE
-                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                        showErrorMessage(registrationForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    // Check if this is an iPhone or iOS device
+                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
+                        // Show a polite message for iOS devices
+                        const deviceMessage = `
+                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
+                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
+                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
+                                <p>For the best experience, please:</p>
+                                <ul>
+                                    <li>Try using a desktop or laptop computer</li>
+                                    <li>Use a device with a newer version of iOS</li>
+                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
+                                </ul>
+                            </div>
+                        `;
+                        showErrorMessage(registrationForm, deviceMessage);
                     } else {
-                        showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                        showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.');
                     }
                     
                     submitBtn.innerHTML = originalBtnText;
@@ -532,7 +576,7 @@ function initFormHandlers() {
                 };
                 
                 xhr.ontimeout = function() {
-                    showErrorMessage(registrationForm, 'Request timed out. Please try again.');
+                    showErrorMessage(registrationForm, 'Your request is taking longer than expected. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 };
@@ -545,18 +589,16 @@ function initFormHandlers() {
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                     
-                    // Log the request details for debugging
-                    console.log('Sending request to:', scriptUrl);
+
                     
                     // Send the form data
                     xhr.send(formData);
                     
-                    // Log that the request was sent
-                    console.log('Request sent successfully');
+
                 } catch (e) {
                     // Catch any errors that occur during request setup
-                    console.error('Error setting up request:', e);
-                    showErrorMessage(registrationForm, 'Error setting up request: ' + e.message);
+
+                    showErrorMessage(registrationForm, 'There was a problem connecting to our server. Please try again later.');
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
                 }
