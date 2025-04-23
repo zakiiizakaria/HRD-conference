@@ -9,18 +9,22 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Get the requesting origin
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+// Get the requesting origin - use wildcard for maximum compatibility
+$origin = '*';
 
-// Set headers to handle AJAX requests and CORS - more permissive for international users
+// Set headers to handle AJAX requests and CORS - extra permissive for older iPhones
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Origin, Accept');
+header('Access-Control-Max-Age: 86400'); // 24 hours cache for preflight
 header('Access-Control-Allow-Credentials: true');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
+
+// For older browsers and iPhone SE
+header('Connection: keep-alive');
 
 // Enable custom error logging
 ini_set('log_errors', 1);

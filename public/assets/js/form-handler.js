@@ -122,15 +122,35 @@ function initFormHandlers() {
             
             // Add additional headers and settings for better mobile compatibility
             try {
-                // Open and send the request
-                xhr.open('POST', scriptUrl, true);
-                xhr.timeout = 30000; // 30 seconds timeout
+                // Detect if this is an iPhone SE or older iPhone
+                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                    (navigator.userAgent.includes('iPhone OS 9') || 
+                     navigator.userAgent.includes('iPhone OS 10') || 
+                     navigator.userAgent.includes('iPhone OS 11') || 
+                     navigator.userAgent.includes('iPhone OS 12') || 
+                     navigator.userAgent.includes('iPhone OS 13'));
+                
+                // Use a different approach for older iPhones
+                if (isOlderIPhone) {
+                    console.log('Detected older iPhone, using compatibility mode');
+                    
+                    // For older iPhones, use a simpler approach without custom headers
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    
+                    // Don't set custom headers for older iPhones
+                    // This can sometimes cause issues with CORS
+                } else {
+                    // Standard approach for modern devices
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 30000; // 30 seconds timeout
+                    
+                    // Add a specific header to identify mobile submissions
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                }
                 
                 // Log the request details for debugging
                 console.log('Sending request to:', scriptUrl);
-                
-                // Add a specific header to identify mobile submissions
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 
                 // Send the form data
                 xhr.send(formData);
@@ -254,15 +274,35 @@ function initFormHandlers() {
             
             // Add additional headers and settings for better mobile compatibility
             try {
-                // Open and send the request
-                xhr.open('POST', scriptUrl, true);
-                xhr.timeout = 30000; // 30 seconds timeout
+                // Detect if this is an iPhone SE or older iPhone
+                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                    (navigator.userAgent.includes('iPhone OS 9') || 
+                     navigator.userAgent.includes('iPhone OS 10') || 
+                     navigator.userAgent.includes('iPhone OS 11') || 
+                     navigator.userAgent.includes('iPhone OS 12') || 
+                     navigator.userAgent.includes('iPhone OS 13'));
+                
+                // Use a different approach for older iPhones
+                if (isOlderIPhone) {
+                    console.log('Detected older iPhone, using compatibility mode');
+                    
+                    // For older iPhones, use a simpler approach without custom headers
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    
+                    // Don't set custom headers for older iPhones
+                    // This can sometimes cause issues with CORS
+                } else {
+                    // Standard approach for modern devices
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 30000; // 30 seconds timeout
+                    
+                    // Add a specific header to identify mobile submissions
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                }
                 
                 // Log the request details for debugging
                 console.log('Sending request to:', scriptUrl);
-                
-                // Add a specific header to identify mobile submissions
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 
                 // Send the form data
                 xhr.send(formData);
@@ -388,15 +428,35 @@ function initFormHandlers() {
             
             // Add additional headers and settings for better mobile compatibility
             try {
-                // Open and send the request
-                xhr.open('POST', scriptUrl, true);
-                xhr.timeout = 30000; // 30 seconds timeout
+                // Detect if this is an iPhone SE or older iPhone
+                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                    (navigator.userAgent.includes('iPhone OS 9') || 
+                     navigator.userAgent.includes('iPhone OS 10') || 
+                     navigator.userAgent.includes('iPhone OS 11') || 
+                     navigator.userAgent.includes('iPhone OS 12') || 
+                     navigator.userAgent.includes('iPhone OS 13'));
+                
+                // Use a different approach for older iPhones
+                if (isOlderIPhone) {
+                    console.log('Detected older iPhone, using compatibility mode');
+                    
+                    // For older iPhones, use a simpler approach without custom headers
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    
+                    // Don't set custom headers for older iPhones
+                    // This can sometimes cause issues with CORS
+                } else {
+                    // Standard approach for modern devices
+                    xhr.open('POST', scriptUrl, true);
+                    xhr.timeout = 30000; // 30 seconds timeout
+                    
+                    // Add a specific header to identify mobile submissions
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                }
                 
                 // Log the request details for debugging
                 console.log('Sending request to:', scriptUrl);
-                
-                // Add a specific header to identify mobile submissions
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 
                 // Send the form data
                 xhr.send(formData);
