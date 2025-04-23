@@ -9,52 +9,12 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Set up logging directories
-$logDir = __DIR__ . '/logs';
-if (!file_exists($logDir)) {
-    mkdir($logDir, 0755, true);
-}
-
-// Define log file paths
-$formErrorLog = $logDir . '/form_errors.log';
-$emailLog = $logDir . '/email_logs.log';
-$clientErrorLog = $logDir . '/client_errors.log';
-
-// Set up logging
+// Enable custom error logging
 ini_set('log_errors', 1);
-ini_set('error_log', $formErrorLog);
+ini_set('error_log', __DIR__ . '/form_errors.log');
 
 // Define timestamp format constant
 define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
-
-// Custom exception for form data errors
-class FormDataException extends Exception {}
-
-// Function to log client errors
-function logClientError($message, $data = []) {
-    global $clientErrorLog;
-    $logDir = dirname($clientErrorLog);
-    
-    // Ensure log directory exists
-    if (!file_exists($logDir)) {
-        mkdir($logDir, 0755, true);
-    }
-    
-    // Format log message
-    $logEntry = '[' . date(TIMESTAMP_FORMAT) . '] ' . $message;
-    
-    // Add data if provided
-    if (!empty($data)) {
-        $logEntry .= ' - Data: ' . json_encode($data);
-    }
-    
-    // Add request information
-    $logEntry .= ' - IP: ' . $_SERVER['REMOTE_ADDR'];
-    $logEntry .= ' - UserAgent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown');
-    
-    // Write to log file
-    file_put_contents($clientErrorLog, $logEntry . PHP_EOL, FILE_APPEND);
-}
 
 // Log form submission attempt
 error_log("[" . date(TIMESTAMP_FORMAT) . "] Speaker form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
@@ -62,45 +22,12 @@ error_log("[" . date(TIMESTAMP_FORMAT) . "] Speaker form submission attempt from
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
-// Set headers to handle AJAX requests and CORS
+// Set headers to handle AJAX requests and CORS - more permissive for international users
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Client-Error');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
-
-// Check if this is a client error report
-if (isset($_SERVER['HTTP_X_CLIENT_ERROR']) && $_SERVER['HTTP_X_CLIENT_ERROR'] === 'true') {
-    try {
-        // Get error data from request
-        $errorData = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$errorData) {
-            throw new FormDataException('No error data provided');
-        }
-        
-        // Log the client error
-        logClientError('Client-side error during speaker form submission', $errorData);
-        
-        // Return success response
-        echo json_encode([
-            'success' => true,
-            'message' => 'Error logged successfully'
-        ]);
-        exit;
-    } catch (Exception $e) {
-        // Log the error logging failure
-        error_log('Error logging client error: ' . $e->getMessage());
-        
-        // Return error response
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error logging failed'
-        ]);
-        exit;
-    }
-}
-
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
