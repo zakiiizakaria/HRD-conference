@@ -148,8 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'company' => $company,
             'jobTitle' => $jobTitle,
             'contactNumber' => $contactNumber,
-            'topic' => $_POST['topic'] ?? 'Not specified',
-            'bio' => $_POST['bio'] ?? 'Not provided'
         ];
         
         // Set success response for database storage
