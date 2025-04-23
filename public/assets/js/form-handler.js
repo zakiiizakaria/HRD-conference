@@ -48,47 +48,57 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
                 
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
-                }
-                return response.text().then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+            // Add debug info
+            formData.append('device_info', navigator.userAgent);
+            
+            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
+            const xhr = new XMLHttpRequest();
+            
+            // Set up event listeners
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                // Show success message
+                                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                                
+                                // Reset form
+                                sponsorForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                            }
+                        } catch (e) {
+                            showErrorMessage(sponsorForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                    } else {
+                        showErrorMessage(sponsorForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
                     }
-                });
-            })
-            .then(data => {
-                
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
                     
-                    // Reset form
-                    sponsorForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                    // Reset button state
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Display raw error details in the UI
-                showErrorMessage(sponsorForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
-            })
-            .finally(() => {
-                // Reset button state
+            };
+            
+            xhr.onerror = function() {
+                showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            });
+            };
+            
+            xhr.ontimeout = function() {
+                showErrorMessage(sponsorForm, 'Request timed out. Please try again.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            };
+            
+            // Open and send the request
+            xhr.open('POST', scriptUrl, true);
+            xhr.timeout = 30000; // 30 seconds timeout
+            xhr.send(formData);
         });
     }
 
@@ -125,46 +135,57 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
                 
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
-                }
-                return response.text().then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+            // Add debug info
+            formData.append('device_info', navigator.userAgent);
+            
+            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
+            const xhr = new XMLHttpRequest();
+            
+            // Set up event listeners
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                // Show success message
+                                showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                                
+                                // Reset form
+                                speakingForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                            }
+                        } catch (e) {
+                            showErrorMessage(speakingForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                    } else {
+                        showErrorMessage(speakingForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
                     }
-                });
-            })
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
                     
-                    // Reset form
-                    speakingForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                    // Reset button state
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Display raw error details in the UI
-                showErrorMessage(speakingForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
-            })
-            .finally(() => {
-                // Reset button state
+            };
+            
+            xhr.onerror = function() {
+                showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            });
+            };
+            
+            xhr.ontimeout = function() {
+                showErrorMessage(speakingForm, 'Request timed out. Please try again.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            };
+            
+            // Open and send the request
+            xhr.open('POST', scriptUrl, true);
+            xhr.timeout = 30000; // 30 seconds timeout
+            xhr.send(formData);
         });
     }
     
@@ -203,46 +224,57 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
                 
-            fetch(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
-                }
-                return response.text().then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+            // Add debug info
+            formData.append('device_info', navigator.userAgent);
+            
+            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
+            const xhr = new XMLHttpRequest();
+            
+            // Set up event listeners
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.success) {
+                                // Show success message
+                                showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                                
+                                // Reset form
+                                registrationForm.reset();
+                            } else {
+                                // Show error message
+                                showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                            }
+                        } catch (e) {
+                            showErrorMessage(registrationForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                    } else {
+                        showErrorMessage(registrationForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
                     }
-                });
-            })
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
                     
-                    // Reset form
-                    registrationForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                    // Reset button state
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Display raw error details in the UI
-                showErrorMessage(registrationForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
-            })
-            .finally(() => {
-                // Reset button state
+            };
+            
+            xhr.onerror = function() {
+                showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            });
+            };
+            
+            xhr.ontimeout = function() {
+                showErrorMessage(registrationForm, 'Request timed out. Please try again.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            };
+            
+            // Open and send the request
+            xhr.open('POST', scriptUrl, true);
+            xhr.timeout = 30000; // 30 seconds timeout
+            xhr.send(formData);
         });
     }
     
@@ -283,7 +315,7 @@ function initFormHandlers() {
         // Remove message after 5 seconds
         setTimeout(() => {
             errorMessage.remove();
-        }, 5000);
+        }, 15000); // Longer timeout for error messages to allow reading
     }
     
     function removeMessages(form) {
