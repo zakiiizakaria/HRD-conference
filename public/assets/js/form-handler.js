@@ -32,23 +32,48 @@ function initializeFormHandlers() {
                 ? 'https://hrdconference.com/log-error.php' 
                 : 'http://localhost:8080/HRD-Conference/public/log-error.php';
             
+            // Gather more detailed information
             const errorData = {
                 formType: formType,
                 errorType: error.name || 'Unknown',
                 errorMessage: error.message || 'No message',
                 userAgent: navigator.userAgent,
                 online: navigator.onLine,
-                timestamp: new Date().toISOString()
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+                networkType: navigator.connection ? navigator.connection.effectiveType : 'unknown',
+                timestamp: new Date().toISOString(),
+                url: window.location.href
             };
             
-            // Send error data to server
-            await fetch(logUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(errorData)
-            });
+            // Add stack trace if available
+            if (error.stack) {
+                errorData.stack = error.stack;
+            }
+            
+            // Send error data to server with retry
+            const sendWithRetry = async (retries = 3) => {
+                try {
+                    const response = await fetch(logUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(errorData),
+                        // Longer timeout for error logging
+                        timeout: 15000
+                    });
+                    
+                    return await response.json();
+                } catch (err) {
+                    if (retries <= 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return sendWithRetry(retries - 1);
+                }
+            };
+            
+            await sendWithRetry();
         } catch (e) {
             // If logging fails, fallback to console
             console.error('Error logging failed:', e);
@@ -104,12 +129,23 @@ function initFormHandlers() {
             // Add retry mechanism for mobile networks
             const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
                 try {
-                    return await fetch(url, options);
+                    const response = await fetch(url, options);
+                    
+                    // Check if response is ok (status in the range 200-299)
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+                    }
+                    
+                    return response;
                 } catch (err) {
                     if (retries <= 1) throw err;
+                    
+                    // Exponential backoff - increase delay with each retry
+                    const nextDelay = delay * 1.5;
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
-                    return fetchWithRetry(url, options, retries - 1, delay);
+                    
+                    return fetchWithRetry(url, options, retries - 1, nextDelay);
                 }
             };
             
@@ -197,12 +233,23 @@ function initFormHandlers() {
             // Add retry mechanism for mobile networks
             const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
                 try {
-                    return await fetch(url, options);
+                    const response = await fetch(url, options);
+                    
+                    // Check if response is ok (status in the range 200-299)
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+                    }
+                    
+                    return response;
                 } catch (err) {
                     if (retries <= 1) throw err;
+                    
+                    // Exponential backoff - increase delay with each retry
+                    const nextDelay = delay * 1.5;
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
-                    return fetchWithRetry(url, options, retries - 1, delay);
+                    
+                    return fetchWithRetry(url, options, retries - 1, nextDelay);
                 }
             };
             
@@ -291,12 +338,23 @@ function initFormHandlers() {
             // Add retry mechanism for mobile networks
             const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
                 try {
-                    return await fetch(url, options);
+                    const response = await fetch(url, options);
+                    
+                    // Check if response is ok (status in the range 200-299)
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+                    }
+                    
+                    return response;
                 } catch (err) {
                     if (retries <= 1) throw err;
+                    
+                    // Exponential backoff - increase delay with each retry
+                    const nextDelay = delay * 1.5;
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    console.log(`Retrying fetch... (${retries-1} attempts left)`);
-                    return fetchWithRetry(url, options, retries - 1, delay);
+                    
+                    return fetchWithRetry(url, options, retries - 1, nextDelay);
                 }
             };
             

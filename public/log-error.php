@@ -11,7 +11,18 @@ error_reporting(E_ALL);
 
 // Set up logging
 ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/client_errors.log');
+
+// Define log file paths
+$logDir = __DIR__ . '/logs';
+$clientErrorLog = $logDir . '/client_errors.log';
+
+// Create logs directory if it doesn't exist
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0755, true);
+}
+
+// Set error log path
+ini_set('error_log', $clientErrorLog);
 
 // Define timestamp format constant
 define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
@@ -58,15 +69,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $logMessage = "[" . date(TIMESTAMP_FORMAT) . "] Form: $formType, Error: $errorType - $errorMessage, ";
         $logMessage .= "UserAgent: $userAgent, Online: $online, IP: " . $_SERVER['REMOTE_ADDR'];
         
+        // Make sure log directory exists and is writable
+        if (!file_exists($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
         // Log the error
         error_log($logMessage);
+        
+        // Also write directly to file as a backup method
+        file_put_contents($clientErrorLog, $logMessage . PHP_EOL, FILE_APPEND);
+        
+        // Log request details for debugging
+        $requestDetails = "\nRequest Details:\n";
+        $requestDetails .= "IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
+        $requestDetails .= "User Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown') . "\n";
+        $requestDetails .= "Referer: " . ($_SERVER['HTTP_REFERER'] ?? 'unknown') . "\n";
+        $requestDetails .= "Request Method: " . $_SERVER['REQUEST_METHOD'] . "\n";
+        $requestDetails .= "Request Time: " . date(TIMESTAMP_FORMAT) . "\n";
+        
+        file_put_contents($clientErrorLog, $requestDetails, FILE_APPEND);
         
         $response['success'] = true;
         $response['message'] = 'Error logged successfully';
         
     } catch (Exception $e) {
         $response['message'] = 'Error logging failed: ' . $e->getMessage();
-        error_log("[" . date(TIMESTAMP_FORMAT) . "] Error logging failed: " . $e->getMessage());
+        
+        // Ensure we capture logging failures even if error_log fails
+        $errorMsg = "[" . date(TIMESTAMP_FORMAT) . "] Error logging failed: " . $e->getMessage();
+        error_log($errorMsg);
+        
+        // Direct file write as backup
+        if (file_exists($logDir) || mkdir($logDir, 0755, true)) {
+            file_put_contents($logDir . '/logging_errors.log', $errorMsg . PHP_EOL, FILE_APPEND);
+        }
     }
 } else {
     $response['message'] = 'Invalid request method';
