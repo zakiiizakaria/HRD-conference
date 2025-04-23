@@ -13,9 +13,11 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/form_errors.log');
 
+// Define timestamp format constant
+define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
+
 // Log form submission attempt
-$timestamp = date('Y-m-d H:i:s');
-error_log("[$timestamp] Speaker form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+error_log("[" . date(TIMESTAMP_FORMAT) . "] Speaker form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
@@ -133,55 +135,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $contactNumber
         ]);
         
+        // Get the inserted ID
+        $insertId = $pdo->lastInsertId();
+        
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] Speaker data inserted successfully. ID: $insertId");
         $response['debug']['insert'] = "Data inserted successfully";
         
-        // Get additional fields for email
-        $topic = $_POST['topic'] ?? 'Not specified';
-        $bio = $_POST['bio'] ?? 'Not provided';
-        
-        // Send email notification to admin
+        // Prepare form data for email
         $formData = [
             'fullName' => $fullName,
             'email' => $email,
             'company' => $company,
             'jobTitle' => $jobTitle,
             'contactNumber' => $contactNumber,
-            'topic' => $topic,
-            'bio' => $bio
+            'topic' => $_POST['topic'] ?? 'Not specified',
+            'bio' => $_POST['bio'] ?? 'Not provided'
         ];
         
-        $adminEmailHtml = createSpeakerEmailTemplate($formData);
-        $adminEmailResult = sendEmail(
-            [
-                'admin@roomofleaders.com',
-                'adam@roomofleaders.com',
-            ],
-            'HRD Conference Admin',
-            'New Speaker Application from ' . $fullName,
-            $adminEmailHtml,
-            '',
-            ['email' => $email, 'name' => $fullName]
-        );
-        
-        // Send confirmation email to user
-        $userEmailHtml = createConfirmationEmailTemplate('speaker', $formData);
-        $userEmailResult = sendEmail(
-            $email,
-            $fullName,
-            'HRD Conference - Speaker Application Confirmation',
-            $userEmailHtml
-        );
-        
-        $response['debug']['admin_email'] = $adminEmailResult;
-        $response['debug']['user_email'] = $userEmailResult;
-        
+        // Set success response for database storage
         $response['success'] = true;
-        $response['message'] = 'Speaker application successfully stored in database and email notifications sent';
+        $response['message'] = 'Speaker application successfully stored in database';
         $response['data'] = [
-            'id' => $pdo->lastInsertId(),
+            'id' => $insertId,
             'fullName' => $fullName,
             'email' => $email
         ];
+        
+        // Now handle email sending separately
+        try {
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Starting email sending process for speaker ID: $insertId");
+            
+            // Send email notification to admin
+            $adminEmailHtml = createSpeakerEmailTemplate($formData);
+            $adminEmailResult = sendEmail(
+                [
+                    'admin@roomofleaders.com',
+                    'abdul@roomofleaders.com',
+                ],
+                'HRD Conference Admin',
+                'New Speaker Application from ' . $fullName,
+                $adminEmailHtml,
+                '',
+                ['email' => $email, 'name' => $fullName]
+            );
+            
+            // Send confirmation email to user
+            $userEmailHtml = createConfirmationEmailTemplate('speaker', $formData);
+            $userEmailResult = sendEmail(
+                $email,
+                $fullName,
+                'HRD Conference - Speaker Application Confirmation',
+                $userEmailHtml
+            );
+            
+            $response['debug']['admin_email'] = $adminEmailResult;
+            $response['debug']['user_email'] = $userEmailResult;
+            
+            // Log email status but don't update UI response message
+            if ($adminEmailResult['success'] && $userEmailResult['success']) {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Email notifications sent successfully for speaker ID: $insertId");
+            } else {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Issue sending email notifications for speaker ID: $insertId");
+            }
+            
+        } catch (Exception $emailException) {
+            // Log email error but don't affect the main response success
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Email exception for speaker ID: $insertId - " . $emailException->getMessage());
+            $response['debug']['email_error'] = $emailException->getMessage();
+        }
         
     } catch (PDOException $e) {
         $response['message'] = 'Database error: ' . $e->getMessage();

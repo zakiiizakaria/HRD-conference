@@ -13,8 +13,11 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/form_errors.log');
 
+// Define timestamp format constant
+define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
+
 // Log form submission attempt
-error_log("[" . date('Y-m-d H:i:s') . "] Form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+error_log("[" . date(TIMESTAMP_FORMAT) . "] Sponsorship form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
@@ -127,9 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $interest
         ]);
         
+        // Get the inserted ID
+        $insertId = $pdo->lastInsertId();
+        
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] Sponsorship data inserted successfully. ID: $insertId");
         $response['debug']['insert'] = "Data inserted successfully";
         
-        // Send email notification to admin
+        // Prepare form data for email
         $formData = [
             'fullName' => $fullName,
             'email' => $email,
@@ -139,38 +146,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'interest' => $interest
         ];
         
-        $adminEmailHtml = createSponsorshipEmailTemplate($formData);
-        $adminEmailResult = sendEmail(
-            [
-                'admin@roomofleaders.com',
-                'abdul@roomofleaders.com',
-            ],
-            'HRD Conference Admin',
-            'New Sponsorship Inquiry from ' . $fullName,
-            $adminEmailHtml,
-            '',
-            ['email' => $email, 'name' => $fullName]
-        );
-        
-        // Send confirmation email to user
-        $userEmailHtml = createConfirmationEmailTemplate('sponsorship', $formData);
-        $userEmailResult = sendEmail(
-            $email,
-            $fullName,
-            'HRD Conference - Sponsorship Inquiry Confirmation',
-            $userEmailHtml
-        );
-        
-        $response['debug']['admin_email'] = $adminEmailResult;
-        $response['debug']['user_email'] = $userEmailResult;
-        
+        // Set success response for database storage
         $response['success'] = true;
-        $response['message'] = 'Sponsorship inquiry successfully stored in database and email notifications sent';
+        $response['message'] = 'Sponsorship inquiry successfully stored in database';
         $response['data'] = [
-            'id' => $pdo->lastInsertId(),
+            'id' => $insertId,
             'fullName' => $fullName,
             'email' => $email
         ];
+        
+        // Now handle email sending separately
+        try {
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Starting email sending process for sponsorship ID: $insertId");
+            
+            // Send email notification to admin
+            $adminEmailHtml = createSponsorshipEmailTemplate($formData);
+            $adminEmailResult = sendEmail(
+                [
+                    'admin@roomofleaders.com',
+                    'abdul@roomofleaders.com',
+                ],
+                'HRD Conference Admin',
+                'New Sponsorship Inquiry from ' . $fullName,
+                $adminEmailHtml,
+                '',
+                ['email' => $email, 'name' => $fullName]
+            );
+            
+            // Send confirmation email to user
+            $userEmailHtml = createConfirmationEmailTemplate('sponsorship', $formData);
+            $userEmailResult = sendEmail(
+                $email,
+                $fullName,
+                'HRD Conference - Sponsorship Inquiry Confirmation',
+                $userEmailHtml
+            );
+            
+            $response['debug']['admin_email'] = $adminEmailResult;
+            $response['debug']['user_email'] = $userEmailResult;
+            
+            // Log email status but don't update UI response message
+            if ($adminEmailResult['success'] && $userEmailResult['success']) {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Email notifications sent successfully for sponsorship ID: $insertId");
+            } else {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Issue sending email notifications for sponsorship ID: $insertId");
+            }
+            
+        } catch (Exception $emailException) {
+            // Log email error but don't affect the main response success
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Email exception for sponsorship ID: $insertId - " . $emailException->getMessage());
+            $response['debug']['email_error'] = $emailException->getMessage();
+        }
+        
+        // Success response is now set in the email handling section
         
     } catch (PDOException $e) {
         $response['message'] = 'Database error: ' . $e->getMessage();
@@ -179,14 +207,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['debug']['error_trace'] = $e->getTraceAsString();
         
         // Log detailed error information
-        error_log("[" . date('Y-m-d H:i:s') . "] PDO Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] PDO Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     } catch (InvalidArgumentException $e) {
         $response['message'] = $e->getMessage();
         $response['debug']['error_type'] = 'InvalidArgumentException';
         $response['debug']['error_message'] = $e->getMessage();
         
         // Log validation error
-        error_log("[" . date('Y-m-d H:i:s') . "] Validation Error: " . $e->getMessage());
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] Validation Error: " . $e->getMessage());
     } catch (Exception $e) {
         $response['message'] = 'Unexpected error: ' . $e->getMessage();
         $response['debug']['error_type'] = 'Exception';
@@ -194,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['debug']['error_trace'] = $e->getTraceAsString();
         
         // Log general exception
-        error_log("[" . date('Y-m-d H:i:s') . "] Unexpected Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] Unexpected Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     }
 } else {
     $response['message'] = 'Invalid request method';
