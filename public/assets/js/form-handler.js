@@ -54,7 +54,18 @@ function initFormHandlers() {
                 credentials: 'include',
                 mode: 'cors'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+                    }
+                });
+            })
             .then(data => {
                 
                 if (data.success) {
@@ -69,7 +80,9 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again.');
+                console.error('Error:', error);
+                // Display raw error details in the UI
+                showErrorMessage(sponsorForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
             })
             .finally(() => {
                 // Reset button state
@@ -118,7 +131,18 @@ function initFormHandlers() {
                 credentials: 'include',
                 mode: 'cors'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+                    }
+                });
+            })
             .then(data => {
                 if (data.success) {
                     // Show success message
@@ -133,7 +157,8 @@ function initFormHandlers() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again.');
+                // Display raw error details in the UI
+                showErrorMessage(speakingForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
             })
             .finally(() => {
                 // Reset button state
@@ -184,7 +209,18 @@ function initFormHandlers() {
                 credentials: 'include',
                 mode: 'cors'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}, Text: ${response.statusText}`);
+                }
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Invalid JSON response: ${e.message}\nResponse text: ${text.substring(0, 500)}`);
+                    }
+                });
+            })
             .then(data => {
                 if (data.success) {
                     // Show success message
@@ -199,7 +235,8 @@ function initFormHandlers() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again.');
+                // Display raw error details in the UI
+                showErrorMessage(registrationForm, 'Error: ' + error.toString() + '<br><pre style="background:#f5f5f5;padding:10px;margin-top:10px;overflow:auto;">' + JSON.stringify(error, Object.getOwnPropertyNames(error), 2) + '</pre>');
             })
             .finally(() => {
                 // Reset button state
