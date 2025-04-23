@@ -95,7 +95,7 @@ function initFormHandlers() {
             })
             .catch(error => {
                 console.error('Form submission error:', error);
-                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                showErrorMessage(sponsorForm, 'Submission failed. Please try again or use a different device (e.g., laptop or Android). You can also contact us at admin@hrdconference.com.');
             })
             .finally(() => {
                 // Reset button state
@@ -165,7 +165,7 @@ function initFormHandlers() {
             })
             .catch(error => {
                 console.error('Form submission error:', error);
-                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                showErrorMessage(speakingForm, 'Submission failed. Please try again or use a different device (e.g., laptop or Android). You can also contact us at admin@hrdconference.com.');
             })
             .finally(() => {
                 // Reset button state
@@ -236,8 +236,8 @@ function initFormHandlers() {
                 }
             })
             .catch(error => {
-                console.error('Form submission error:', error);
-                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                console.error('Registration submission error:', error);
+                showErrorMessage(registrationForm, 'Submission failed. Please try again or use a different device (e.g., laptop or Android). You can also contact us at admin@hrdconference.com.');
             })
             .finally(() => {
                 // Reset button state
