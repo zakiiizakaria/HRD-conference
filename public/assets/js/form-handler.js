@@ -7,12 +7,6 @@
 // Initialize form handlers immediately
 function initializeFormHandlers() {
     document.addEventListener('DOMContentLoaded', function() {
-        // Skip initialization if we're in iPhone compatibility mode
-        if (window.isIPhoneCompatibilityMode) {
-            console.log('Skipping regular form handler initialization due to iPhone compatibility mode');
-            return;
-        }
-        
         initFormHandlers();
     });
 }
