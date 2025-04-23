@@ -4,10 +4,25 @@
  * With simplified approach for maximum compatibility across all devices including iOS
  */
 
-// Initialize form handlers immediately
-document.addEventListener('DOMContentLoaded', function() {
-    initFormHandlers();
-});
+// Make sure this script runs as soon as possible
+window.onload = function() {
+    console.log('Form handler script loaded and initializing...');
+    // Slight delay to ensure all DOM elements are fully loaded
+    setTimeout(function() {
+        initFormHandlers();
+    }, 100);
+};
+
+// Also try to initialize immediately in case window.onload is overridden
+(function() {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(initFormHandlers, 100);
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initFormHandlers, 100);
+        });
+    }
+})();
 
 // Function to handle form submissions
 function initFormHandlers() {
@@ -28,7 +43,13 @@ function initFormHandlers() {
         // Determine the submit URL based on hostname
         const host = window.location.hostname;
         const isLocal = host === 'localhost' || host === '127.0.0.1';
-        let submitUrl = isLocal ? 'http://localhost/HRD-Conference/public/' + endpoint : '/' + endpoint;
+        let submitUrl;
+        if (isLocal) {
+            submitUrl = '/HRD-Conference/public/' + endpoint;
+        } else {
+            submitUrl = '/' + endpoint;
+        }
+        console.log('Submitting to URL:', submitUrl);
         
         // Create a simple XMLHttpRequest (most compatible with all browsers)
         const xhr = new XMLHttpRequest();
@@ -88,32 +109,81 @@ function initFormHandlers() {
         return false; // Prevent form submission
     }
     
+    // Direct form attachment to prevent refreshes
+    console.log('Looking for forms to attach handlers to...');
+    
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
     if (sponsorForm) {
-        sponsorForm.addEventListener('submit', function(e) {
+        console.log('Found sponsor form, attaching handler');
+        sponsorForm.onsubmit = function(e) {
+            console.log('Sponsor form submitted');
             e.preventDefault();
+            e.stopPropagation();
             submitForm(sponsorForm, 'store-sponsorship.php', 'Your sponsorship inquiry has been successfully submitted!');
-        });
+            return false; // Triple ensure no form submission
+        };
+    } else {
+        console.log('Could not find sponsor form with ID "sponsor-form"');
     }
     
     // Speaker Form Handler
     const speakingForm = document.getElementById('speaking-form');
     if (speakingForm) {
-        speakingForm.addEventListener('submit', function(e) {
+        console.log('Found speaking form, attaching handler');
+        speakingForm.onsubmit = function(e) {
+            console.log('Speaking form submitted');
             e.preventDefault();
+            e.stopPropagation();
             submitForm(speakingForm, 'store-speaker.php', 'Your speaking application has been successfully submitted!');
-        });
+            return false; // Triple ensure no form submission
+        };
+    } else {
+        console.log('Could not find speaking form with ID "speaking-form"');
     }
     
     // Registration Form Handler
     const registrationForm = document.getElementById('registration-form');
     if (registrationForm) {
-        registrationForm.addEventListener('submit', function(e) {
+        console.log('Found registration form, attaching handler');
+        registrationForm.onsubmit = function(e) {
+            console.log('Registration form submitted');
             e.preventDefault();
+            e.stopPropagation();
             submitForm(registrationForm, 'store-registration.php', 'Your registration has been successfully submitted!');
-        });
+            return false; // Triple ensure no form submission
+        };
+    } else {
+        console.log('Could not find registration form with ID "registration-form"');
     }
+    
+    // Backup form handling - catch any forms that might have been missed
+    document.querySelectorAll('form').forEach(function(form) {
+        if (form.id === 'sponsor-form' || form.id === 'speaking-form' || form.id === 'registration-form') {
+            // Already handled above
+            return;
+        }
+        
+        console.log('Found additional form, attaching generic handler:', form.id || 'unnamed form');
+        form.onsubmit = function(e) {
+            console.log('Generic form submitted:', form.id || 'unnamed form');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Determine the endpoint based on form attributes or naming convention
+            let endpoint = 'store-registration.php'; // Default fallback
+            if (form.hasAttribute('data-endpoint')) {
+                endpoint = form.getAttribute('data-endpoint');
+            } else if (form.id && form.id.includes('sponsor')) {
+                endpoint = 'store-sponsorship.php';
+            } else if (form.id && (form.id.includes('speak') || form.id.includes('speaker'))) {
+                endpoint = 'store-speaker.php';
+            }
+            
+            submitForm(form, endpoint, 'Your form has been successfully submitted!');
+            return false;
+        };
+    });
 }
 
 // Helper functions for form feedback
