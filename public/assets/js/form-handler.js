@@ -1,244 +1,298 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
  * Handles form submissions using PHP backend
- * With simplified approach for maximum compatibility across all devices including iOS
  */
 
-// Make sure this script runs as soon as possible
-window.onload = function() {
-    console.log('Form handler script loaded and initializing...');
-    // Slight delay to ensure all DOM elements are fully loaded
-    setTimeout(function() {
-        initFormHandlers();
-    }, 100);
-};
-
-// Also try to initialize immediately in case window.onload is overridden
-(function() {
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(initFormHandlers, 100);
-    } else {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initFormHandlers, 100);
+// Initialize form handlers immediately
+function initializeFormHandlers() {
+    // Clear any potential cached EmailJS data
+    if (window.localStorage) {
+        // Remove any EmailJS related items from localStorage
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes('emailjs') || key.includes('email-js')) {
+                localStorage.removeItem(key);
+            }
         });
     }
-})();
+    
+    // Clear any potential service worker cache
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initFormHandlers();
+    });
+}
 
 // Function to handle form submissions
 function initFormHandlers() {
-    // Helper function to handle form submissions
-    function submitForm(form, endpoint, successMessage) {
-        // Show loading state
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-        
-        // Create form data from the form
-        const formData = new FormData(form);
-        
-        // Add device info
-        formData.append('device_info', navigator.userAgent);
-        
-        // Determine the submit URL based on hostname
-        const host = window.location.hostname;
-        const isLocal = host === 'localhost' || host === '127.0.0.1';
-        let submitUrl;
-        if (isLocal) {
-            submitUrl = '/HRD-Conference/public/' + endpoint;
-        } else {
-            submitUrl = '/' + endpoint;
-        }
-        console.log('Submitting to URL:', submitUrl);
-        
-        // Create a simple XMLHttpRequest (most compatible with all browsers)
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', submitUrl, true);
-        
-        // Set timeout - shorter timeout for better UX
-        xhr.timeout = 10000; // 10 seconds
-        
-        // Setup completion handler
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                try {
-                    // Try to parse JSON response
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        showSuccessMessage(form, successMessage || 'Your submission has been successfully received.');
-                        form.reset();
-                    } else {
-                        showErrorMessage(form, response.message || 'There was an error processing your submission. Please try again.');
-                    }
-                } catch (e) {
-                    // If not JSON, check for success string in response
-                    if (xhr.responseText.includes('success') && xhr.responseText.includes('true')) {
-                        showSuccessMessage(form, successMessage || 'Your submission has been successfully received.');
-                        form.reset();
-                    } else {
-                        showErrorMessage(form, 'There was a problem with the server response. Please try again later.');
-                        console.error('Response parsing error:', e);
-                    }
-                }
-            } else {
-                showErrorMessage(form, 'Server error (' + xhr.status + '). Please try again later.');
-            }
-            
-            // Reset button state
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-        };
-        
-        // Error handler
-        xhr.onerror = function() {
-            showErrorMessage(form, 'Network error. Please check your connection and try again.');
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-        };
-        
-        // Timeout handler
-        xhr.ontimeout = function() {
-            showErrorMessage(form, 'Request is taking too long. Please try again later.');
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
-        };
-        
-        // Send the request
-        xhr.send(formData);
-        
-        return false; // Prevent form submission
-    }
-    
-    // Direct form attachment to prevent refreshes
-    console.log('Looking for forms to attach handlers to...');
     
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
     if (sponsorForm) {
-        console.log('Found sponsor form, attaching handler');
-        sponsorForm.onsubmit = function(e) {
-            console.log('Sponsor form submitted');
+        sponsorForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            submitForm(sponsorForm, 'store-sponsorship.php', 'Your sponsorship inquiry has been successfully submitted!');
-            return false; // Triple ensure no form submission
-        };
-    } else {
-        console.log('Could not find sponsor form with ID "sponsor-form"');
+            
+            // Get form data
+            const fullName = sponsorForm.querySelector('input[name="fullName"]').value;
+            const email = sponsorForm.querySelector('input[name="email"]').value;
+            const company = sponsorForm.querySelector('input[name="company"]').value;
+            const jobTitle = sponsorForm.querySelector('input[name="jobTitle"]').value;
+            const contactNumber = sponsorForm.querySelector('input[name="contactNumber"]').value;
+            const interest = sponsorForm.querySelector('select[name="interest"]').value;
+            
+            // Show loading state
+            const submitBtn = sponsorForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('interest', interest);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-sponsorship.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    sponsorForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+        });
     }
-    
-    // Speaker Form Handler
+
+    // Speaking Opportunity Form Handler
     const speakingForm = document.getElementById('speaking-form');
     if (speakingForm) {
-        console.log('Found speaking form, attaching handler');
-        speakingForm.onsubmit = function(e) {
-            console.log('Speaking form submitted');
+        speakingForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            submitForm(speakingForm, 'store-speaker.php', 'Your speaking application has been successfully submitted!');
-            return false; // Triple ensure no form submission
-        };
-    } else {
-        console.log('Could not find speaking form with ID "speaking-form"');
+            
+            // Get form data
+            const fullName = speakingForm.querySelector('input[placeholder="Full Name"]').value;
+            const email = speakingForm.querySelector('input[placeholder="Email Address"]').value;
+            const company = speakingForm.querySelector('input[placeholder="Company Name"]').value;
+            const jobTitle = speakingForm.querySelector('input[placeholder="Job Title"]').value;
+            const contactNumber = speakingForm.querySelector('input[placeholder="Contact Number"]').value;
+            
+            // Show loading state
+            const submitBtn = speakingForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-speaker.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    speakingForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+        });
     }
     
     // Registration Form Handler
-    const registrationForm = document.getElementById('registration-form');
+    const registrationForm = document.getElementById('pricing-form');
     if (registrationForm) {
-        console.log('Found registration form, attaching handler');
-        registrationForm.onsubmit = function(e) {
-            console.log('Registration form submitted');
+        registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            submitForm(registrationForm, 'store-registration.php', 'Your registration has been successfully submitted!');
-            return false; // Triple ensure no form submission
-        };
-    } else {
-        console.log('Could not find registration form with ID "registration-form"');
+            
+            // Get form data
+            const fullName = registrationForm.querySelector('input[placeholder="Full Name"]').value;
+            const email = registrationForm.querySelector('input[placeholder="Email Address"]').value;
+            const company = registrationForm.querySelector('input[placeholder="Company Name"]').value;
+            const jobTitle = registrationForm.querySelector('input[placeholder="Job Title"]').value;
+            const contactNumber = registrationForm.querySelector('input[placeholder="Contact Number"]').value;
+            const promoCode = registrationForm.querySelector('input[placeholder="Promo Code (optional)"]').value;
+            
+            // Show loading state
+            const submitBtn = registrationForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('email', email);
+            formData.append('company', company);
+            formData.append('jobTitle', jobTitle);
+            formData.append('contactNumber', contactNumber);
+            formData.append('promoCode', promoCode);
+            
+            // Send data to PHP script for database storage
+            const isProduction = window.location.hostname === 'hrdconference.com';
+            const scriptUrl = isProduction 
+                ? 'https://hrdconference.com/store-registration.php' 
+                : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
+                
+            fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                mode: 'cors',
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                    
+                    // Reset form
+                    registrationForm.reset();
+                } else {
+                    // Show error message
+                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+        });
     }
     
-    // Backup form handling - catch any forms that might have been missed
-    document.querySelectorAll('form').forEach(function(form) {
-        if (form.id === 'sponsor-form' || form.id === 'speaking-form' || form.id === 'registration-form') {
-            // Already handled above
-            return;
-        }
+    // Helper functions for form feedback
+    function showSuccessMessage(form, customMessage) {
+        // Remove any existing messages
+        removeMessages(form);
         
-        console.log('Found additional form, attaching generic handler:', form.id || 'unnamed form');
-        form.onsubmit = function(e) {
-            console.log('Generic form submitted:', form.id || 'unnamed form');
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Determine the endpoint based on form attributes or naming convention
-            let endpoint = 'store-registration.php'; // Default fallback
-            if (form.hasAttribute('data-endpoint')) {
-                endpoint = form.getAttribute('data-endpoint');
-            } else if (form.id && form.id.includes('sponsor')) {
-                endpoint = 'store-sponsorship.php';
-            } else if (form.id && (form.id.includes('speak') || form.id.includes('speaker'))) {
-                endpoint = 'store-speaker.php';
-            }
-            
-            submitForm(form, endpoint, 'Your form has been successfully submitted!');
-            return false;
-        };
-    });
+        // Create success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'form-message success-message';
+        successMessage.innerHTML = customMessage || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
+        
+        // Insert after form
+        form.parentNode.insertBefore(successMessage, form.nextSibling);
+        
+        // Reset form
+        form.reset();
+        
+        // Remove message after 5 seconds
+        setTimeout(() => {
+            successMessage.remove();
+        }, 5000);
+    }
+    
+    function showErrorMessage(form, customMessage) {
+        // Remove any existing messages
+        removeMessages(form);
+        
+        // Create error message
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'form-message error-message';
+        errorMessage.innerHTML = customMessage || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
+        
+        // Insert after form
+        form.parentNode.insertBefore(errorMessage, form.nextSibling);
+        
+        // Remove message after 5 seconds
+        setTimeout(() => {
+            errorMessage.remove();
+        }, 5000);
+    }
+    
+    function removeMessages(form) {
+        // Remove any existing messages
+        const existingMessages = form.parentNode.querySelectorAll('.form-message');
+        existingMessages.forEach(message => message.remove());
+    }
 }
 
-// Helper functions for form feedback
-function showSuccessMessage(form, customMessage) {
-    // Remove any existing messages
-    removeMessages(form);
-    
-    // Create success message
-    const successMessage = document.createElement('div');
-    successMessage.className = 'form-message success-message';
-    successMessage.innerHTML = customMessage || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
-    
-    // Insert after form
-    form.parentNode.insertBefore(successMessage, form.nextSibling);
-    
-    // Remove message after 5 seconds
-    setTimeout(() => {
-        if (successMessage.parentNode) {
-            successMessage.parentNode.removeChild(successMessage);
-        }
-    }, 5000);
-}
-
-function showErrorMessage(form, customMessage) {
-    // Remove any existing messages
-    removeMessages(form);
-    
-    // Create error message
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'form-message error-message';
-    errorMessage.innerHTML = customMessage || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
-    
-    // Insert after form
-    form.parentNode.insertBefore(errorMessage, form.nextSibling);
-    
-    // Remove message after 15 seconds
-    setTimeout(() => {
-        if (errorMessage.parentNode) {
-            errorMessage.parentNode.removeChild(errorMessage);
-        }
-    }, 15000); // Longer timeout for error messages to allow reading
-}
-
-function removeMessages(form) {
-    // Remove any existing messages
-    const existingMessages = form.parentNode.querySelectorAll('.form-message');
-    existingMessages.forEach(message => {
-        if (message.parentNode) {
-            message.parentNode.removeChild(message);
-        }
-    });
-}
-
-// Function to log errors to server
-function logErrorToServer(formType, error) {
-    console.error('Form submission error:', formType, error);
-    // This function can be expanded to send error logs to the server if needed
-}
+// Initialize form handlers
+initializeFormHandlers();

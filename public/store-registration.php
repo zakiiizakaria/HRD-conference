@@ -9,8 +9,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// CORS headers are set later in the code
-
 // Enable custom error logging
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/form_errors.log');
@@ -21,22 +19,18 @@ define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
 // Log form submission attempt
 error_log("[" . date(TIMESTAMP_FORMAT) . "] Registration form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
-// Get the requesting origin - use wildcard for maximum compatibility
-$origin = '*';
+// Get the requesting origin
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
-// Set headers to handle AJAX requests and CORS - extra permissive for older iPhones
+// Set headers to handle AJAX requests and CORS - more permissive for international users
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Origin, Accept');
-header('Access-Control-Max-Age: 86400'); // 24 hours cache for preflight
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
-
-// For older browsers and iPhone SE
-header('Connection: keep-alive');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -236,23 +230,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response['message'] = 'Invalid request method';
 }
 
-// Check if we need to redirect (for direct form submissions from mobile)
-if (isset($_POST['redirect_url']) && !empty($_POST['redirect_url'])) {
-    $redirectUrl = $_POST['redirect_url'];
-    // Add success parameter if not already present
-    if ($response['success']) {
-        $redirectUrl .= (strpos($redirectUrl, '?') !== false ? '&' : '?') . 'success=true';
-    } else {
-        $redirectUrl .= (strpos($redirectUrl, '?') !== false ? '&' : '?') . 'error=' . urlencode($response['message']);
-    }
-    
-    // Skip detailed logging for redirects to improve performance
-    // Only log critical errors
-    
-    // Redirect
-    header("Location: $redirectUrl");
-    exit;
-} else {
-    // Return JSON response for AJAX/iframe requests
-    echo json_encode($response);
-}
+// Return JSON response
+echo json_encode($response);
