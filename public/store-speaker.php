@@ -30,6 +30,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 // Make sure the content type is JSON even if there's an error later
 header('Content-Type: application/json');
 
+// --- TEMPORARY DEBUG LOGGING ---
+$logFile = __DIR__ . '/logs/php_debug.log'; // Log inside a 'logs' subdirectory within public_html
+$logDir = dirname($logFile);
+if (!is_dir($logDir)) {
+    // Attempt to create the directory with permissions suitable for web server
+    @mkdir($logDir, 0755, true); 
+}
+// Check if directory exists and is writable
+if (is_dir($logDir) && is_writable($logDir)) {
+    $logMessage = "[" . date('Y-m-d H:i:s') . "] ";
+    $logMessage .= "SCRIPT=store-speaker.php | ";
+    $logMessage .= "METHOD=" . $_SERVER['REQUEST_METHOD'] . " | ";
+    $logMessage .= "ORIGIN=" . (isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : 'N/A') . " | ";
+    $logMessage .= "IP=" . $_SERVER['REMOTE_ADDR'] . " | ";
+    $logMessage .= "USER_AGENT=" . (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A') . " | "; 
+    $logMessage .= "POST_DATA=" . json_encode($_POST) . "\n";
+    file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+} else {
+    // Log an error if logging isn't possible (permissions issue?)
+    error_log("PHP Debug Logging Error: Cannot write to log directory: " . $logDir); 
+}
+// --- END TEMPORARY DEBUG LOGGING ---
+
+
 /**
  * Speaker Form Handler
  * Stores form submissions in the database and sends email notifications
