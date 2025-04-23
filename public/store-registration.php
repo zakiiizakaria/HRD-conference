@@ -9,15 +9,28 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Get the requesting origin
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+// Enable custom error logging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/form_errors.log');
 
-// Set headers to handle AJAX requests and CORS
+// Define timestamp format constant
+define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
+
+// Log form submission attempt
+error_log("[" . date(TIMESTAMP_FORMAT) . "] Registration form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+
+// Get the requesting origin
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+
+// Set headers to handle AJAX requests and CORS - more permissive for international users
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 header('Access-Control-Allow-Credentials: true');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -59,6 +72,8 @@ $response['debug']['post_data'] = $_POST;
 $response['debug']['environment'] = $isLocalEnvironment ? 'local' : 'production';
 
 // Include the mail helper
+// Using require_once for the mail helper as it's not a proper namespace
+// that can be imported with 'use' statements
 require_once __DIR__ . '/includes/mail-helper.php';
 
 // Only process POST requests
@@ -124,12 +139,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $promoCode
         ]);
         
+        // Get the inserted ID
+        $insertId = $pdo->lastInsertId();
+        
+        error_log("[" . date(TIMESTAMP_FORMAT) . "] Registration data inserted successfully. ID: $insertId");
         $response['debug']['insert'] = "Data inserted successfully";
         
         // Get ticket type for email
         $ticketType = $_POST['ticketType'] ?? 'Standard';
         
-        // Send email notification to admin
+        // Prepare form data for email
         $formData = [
             'fullName' => $fullName,
             'email' => $email,
@@ -140,38 +159,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'promoCode' => $promoCode
         ];
         
-        $adminEmailHtml = createRegistrationEmailTemplate($formData);
-        $adminEmailResult = sendEmail(
-            [
-                'admin@roomofleaders.com',
-                'areez@roomofleaders.com'
-            ],
-            'HRD Conference Admin',
-            'New Registration from ' . $fullName,
-            $adminEmailHtml,
-            '',
-            ['email' => $email, 'name' => $fullName]
-        );
-        
-        // Send confirmation email to user
-        $userEmailHtml = createConfirmationEmailTemplate('registration', $formData);
-        $userEmailResult = sendEmail(
-            $email,
-            $fullName,
-            'HRD Conference - Registration Confirmation',
-            $userEmailHtml
-        );
-        
-        $response['debug']['admin_email'] = $adminEmailResult;
-        $response['debug']['user_email'] = $userEmailResult;
-        
+        // Set success response for database storage
         $response['success'] = true;
-        $response['message'] = 'Registration successfully stored in database and email notifications sent';
+        $response['message'] = 'Registration successfully stored in database';
         $response['data'] = [
-            'id' => $pdo->lastInsertId(),
+            'id' => $insertId,
             'fullName' => $fullName,
             'email' => $email
         ];
+        
+        // Now handle email sending separately
+        try {
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Starting email sending process for registration ID: $insertId");
+            
+            // Send email notification to admin
+            $adminEmailHtml = createRegistrationEmailTemplate($formData);
+            $adminEmailResult = sendEmail(
+                [
+                    'admin@roomofleaders.com',
+                    'areez@roomofleaders.com'
+                ],
+                'HRD Conference Admin',
+                'New Registration from ' . $fullName,
+                $adminEmailHtml,
+                '',
+                ['email' => $email, 'name' => $fullName]
+            );
+            
+            // Send confirmation email to user
+            $userEmailHtml = createConfirmationEmailTemplate('registration', $formData);
+            $userEmailResult = sendEmail(
+                $email,
+                $fullName,
+                'HRD Conference - Registration Confirmation',
+                $userEmailHtml
+            );
+            
+            $response['debug']['admin_email'] = $adminEmailResult;
+            $response['debug']['user_email'] = $userEmailResult;
+            
+            // Log email status but don't update UI response message
+            if ($adminEmailResult['success'] && $userEmailResult['success']) {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Email notifications sent successfully for registration ID: $insertId");
+            } else {
+                error_log("[" . date(TIMESTAMP_FORMAT) . "] Issue sending email notifications for registration ID: $insertId");
+            }
+            
+        } catch (Exception $emailException) {
+            // Log email error but don't affect the main response success
+            error_log("[" . date(TIMESTAMP_FORMAT) . "] Email exception for registration ID: $insertId - " . $emailException->getMessage());
+            $response['debug']['email_error'] = $emailException->getMessage();
+        }
         
     } catch (PDOException $e) {
         $response['message'] = 'Database error: ' . $e->getMessage();
