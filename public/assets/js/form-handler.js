@@ -27,12 +27,26 @@ function initializeFormHandlers() {
     // Function to log errors to server
     window.logErrorToServer = async function(formType, error) {
         try {
+            // Determine which endpoint to use based on form type
             const isProduction = window.location.hostname === 'hrdconference.com';
-            const logUrl = isProduction 
-                ? 'https://hrdconference.com/log-error.php' 
-                : 'http://localhost:8080/HRD-Conference/public/log-error.php';
+            let logUrl;
             
-            // Gather more detailed information
+            // Use the appropriate form handler PHP file directly
+            if (formType === 'registration') {
+                logUrl = isProduction 
+                    ? 'https://hrdconference.com/store-registration.php' 
+                    : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
+            } else if (formType === 'speaker') {
+                logUrl = isProduction 
+                    ? 'https://hrdconference.com/store-speaker.php' 
+                    : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
+            } else { // Default to sponsorship
+                logUrl = isProduction 
+                    ? 'https://hrdconference.com/store-sponsorship.php' 
+                    : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
+            }
+            
+            // Gather detailed information about the error
             const errorData = {
                 formType: formType,
                 errorType: error.name || 'Unknown',
@@ -58,12 +72,20 @@ function initializeFormHandlers() {
                     const response = await fetch(logUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-Client-Error': 'true' // Special header to indicate this is an error report
                         },
                         body: JSON.stringify(errorData),
+                        credentials: 'include',
+                        mode: 'cors',
+                        cache: 'no-store',
                         // Longer timeout for error logging
                         timeout: 15000
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    }
                     
                     return await response.json();
                 } catch (err) {
