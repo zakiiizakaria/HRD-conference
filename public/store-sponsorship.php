@@ -1,4 +1,35 @@
 <?php
+// Allow requests from the specific production origin
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    // Check if the origin is the specific production domain
+    if ($_SERVER['HTTP_ORIGIN'] === 'https://hrdconference.com') {
+        header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header('Access-Control-Allow-Credentials: true'); // Allow cookies if needed
+        header('Access-Control-Max-Age: 86400'); // Cache preflight requests for 1 day
+    }
+    // You might add 'http://localhost' here for local testing if needed
+    // elseif ($_SERVER['HTTP_ORIGIN'] === 'http://localhost') {
+    //    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    //    // ... other headers ...
+    // }
+}
+
+// Access-Control headers are received during OPTIONS requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
+        // Allow specific methods
+        header("Access-Control-Allow-Methods: POST, OPTIONS");
+    }
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+        // Allow specific headers
+        header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+    }
+    exit(0); // Exit after sending OPTIONS headers
+}
+
+// Make sure the content type is JSON even if there's an error later
+header('Content-Type: application/json');
+
 /**
  * Sponsorship Form Handler
  * Stores form submissions in the database and sends email notifications
@@ -19,45 +50,6 @@ define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
 // Log form submission attempt
 error_log("[" . date(TIMESTAMP_FORMAT) . "] Sponsorship form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
-// Get the requesting origin
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
-
-// Set headers to handle AJAX requests and CORS - more permissive for international users
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
-
-// For testing purposes, let's use local database connection first
-// Once it works locally, we can update to production credentials
-$isLocalEnvironment = false; // Set to false when deploying to production
-
-if ($isLocalEnvironment) {
-    // Local XAMPP database connection parameters
-    $host = "localhost";
-    $db_name = "u197368543_hrd_db"; // Using the same database name for consistency
-    $username = "root"; // XAMPP default username
-    $password = ""; // XAMPP default password (empty)
-} else {
-    // Hostinger production database connection parameters
-    $host = "localhost";
-    $db_name = "u197368543_hrd_db";
-    $username = "u197368543_localhost";
-    $password = "Hrd_conference2025";
-}
-
-$charset = 'utf8mb4';
-
 // Response array
 $response = [
     'success' => false,
@@ -69,7 +61,7 @@ $response = [
 // Add debug info
 $response['debug']['request_method'] = $_SERVER['REQUEST_METHOD'];
 $response['debug']['post_data'] = $_POST;
-$response['debug']['environment'] = $isLocalEnvironment ? 'local' : 'production';
+$response['debug']['environment'] = 'production';
 
 // Include the mail helper
 // Using require_once for the mail helper as it's not a proper namespace
@@ -80,6 +72,12 @@ require_once __DIR__ . '/includes/mail-helper.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Create database connection
+        $host = "localhost";
+        $db_name = "u197368543_hrd_db";
+        $username = "u197368543_localhost";
+        $password = "Hrd_conference2025";
+        $charset = 'utf8mb4';
+
         $dsn = "mysql:host=$host;dbname=$db_name;charset=$charset";
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

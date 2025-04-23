@@ -1,4 +1,35 @@
 <?php
+// Allow requests from the specific production origin
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    // Check if the origin is the specific production domain
+    if ($_SERVER['HTTP_ORIGIN'] === 'https://hrdconference.com') {
+        header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header('Access-Control-Allow-Credentials: true'); // Allow cookies if needed
+        header('Access-Control-Max-Age: 86400'); // Cache preflight requests for 1 day
+    }
+    // You might add 'http://localhost' here for local testing if needed
+    // elseif ($_SERVER['HTTP_ORIGIN'] === 'http://localhost') {
+    //    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    //    // ... other headers ...
+    // }
+}
+
+// Access-Control headers are received during OPTIONS requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
+        // Allow specific methods
+        header("Access-Control-Allow-Methods: POST, OPTIONS");
+    }
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+        // Allow specific headers
+        header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+    }
+    exit(0); // Exit after sending OPTIONS headers
+}
+
+// Make sure the content type is JSON even if there's an error later
+header('Content-Type: application/json');
+
 /**
  * Speaker Form Handler
  * Stores form submissions in the database and sends email notifications
@@ -23,20 +54,20 @@ error_log("[" . date(TIMESTAMP_FORMAT) . "] Speaker form submission attempt from
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
 // Set headers to handle AJAX requests and CORS - more permissive for international users
-header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+// header('Content-Type: application/json'); // Already set above
+// header("Access-Control-Allow-Origin: $origin");
+// header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+// header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+// header('Access-Control-Allow-Credentials: true');
+// header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+// header('Pragma: no-cache');
+// header('Expires: 0');
 
 // Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+//     http_response_code(200);
+//     exit;
+// }
 
 // For testing purposes, let's use local database connection first
 // Once it works locally, we can update to production credentials
