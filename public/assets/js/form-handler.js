@@ -1,6 +1,7 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
  * Handles form submissions using PHP backend
+ * With special handling for iPhone SE and older iPhones
  */
 
 // Initialize form handlers immediately
@@ -58,111 +59,141 @@ function initFormHandlers() {
                 formData.append('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
-            const xhr = new XMLHttpRequest();
+            // Detect if this is an iPhone SE or older iPhone
+            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                (navigator.userAgent.includes('iPhone OS 9') || 
+                 navigator.userAgent.includes('iPhone OS 10') || 
+                 navigator.userAgent.includes('iPhone OS 11') || 
+                 navigator.userAgent.includes('iPhone OS 12') || 
+                 navigator.userAgent.includes('iPhone OS 13') ||
+                 navigator.userAgent.includes('iPhone SE'));
             
-            // Set up event listeners
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            if (data.success) {
-                                // Show success message
-                                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
-                                
-                                // Reset form
-                                sponsorForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
-                            }
-                        } catch (e) {
-                            showErrorMessage(sponsorForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
-                        }
+            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
+            if (isOlderIPhone) {
+                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                
+                // Use Fetch API for iPhone SE
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    referrerPolicy: 'no-referrer'
+                })
+                .then(response => {
+                    console.log('Fetch response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch response data:', data);
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        sponsorForm.reset();
                     } else {
-                        showErrorMessage(sponsorForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        // Show error message
+                        showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
                     }
                     
                     // Reset button state
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
-                }
-            };
-            
-            xhr.onerror = function(e) {
-                // Get detailed error information
-                const errorDetails = {
-                    readyState: xhr.readyState,
-                    status: xhr.status,
-                    statusText: xhr.statusText || 'No status text',
-                    responseType: xhr.responseType,
-                    responseURL: xhr.responseURL || 'No response URL',
-                    errorEvent: e ? e.type : 'No event details'
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showErrorMessage(sponsorForm, 'Error with Fetch API: ' + error.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            } else {
+                // Use XMLHttpRequest for modern devices
+                const xhr = new XMLHttpRequest();
+                
+                // Set up event listeners
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    // Show success message
+                                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                                    
+                                    // Reset form
+                                    sponsorForm.reset();
+                                } else {
+                                    // Show error message
+                                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
+                                }
+                            } catch (e) {
+                                showErrorMessage(sponsorForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            }
+                        } else {
+                            showErrorMessage(sponsorForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                        
+                        // Reset button state
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                    }
                 };
                 
-                console.error('XHR Error Details:', errorDetails);
-                
-                // Special handling for iPhone SE
-                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                    showErrorMessage(sponsorForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
-                } else {
-                    showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
-                }
-                
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            xhr.ontimeout = function() {
-                showErrorMessage(sponsorForm, 'Request timed out. Please try again.');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            // Add additional headers and settings for better mobile compatibility
-            try {
-                // Detect if this is an iPhone SE or older iPhone
-                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                    (navigator.userAgent.includes('iPhone OS 9') || 
-                     navigator.userAgent.includes('iPhone OS 10') || 
-                     navigator.userAgent.includes('iPhone OS 11') || 
-                     navigator.userAgent.includes('iPhone OS 12') || 
-                     navigator.userAgent.includes('iPhone OS 13'));
-                
-                // Use a different approach for older iPhones
-                if (isOlderIPhone) {
-                    console.log('Detected older iPhone, using compatibility mode');
+                xhr.onerror = function(e) {
+                    // Get detailed error information
+                    const errorDetails = {
+                        readyState: xhr.readyState,
+                        status: xhr.status,
+                        statusText: xhr.statusText || 'No status text',
+                        responseType: xhr.responseType,
+                        responseURL: xhr.responseURL || 'No response URL',
+                        errorEvent: e ? e.type : 'No event details'
+                    };
                     
-                    // For older iPhones, use a simpler approach without custom headers
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    console.error('XHR Error Details:', errorDetails);
                     
-                    // Don't set custom headers for older iPhones
-                    // This can sometimes cause issues with CORS
-                } else {
-                    // Standard approach for modern devices
+                    // Special handling for iPhone SE
+                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                        showErrorMessage(sponsorForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    } else {
+                        showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                    }
+                    
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                xhr.ontimeout = function() {
+                    showErrorMessage(sponsorForm, 'Request timed out. Please try again.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                // Add additional headers and settings for better mobile compatibility
+                try {
                     xhr.open('POST', scriptUrl, true);
                     xhr.timeout = 30000; // 30 seconds timeout
                     
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    
+                    // Log the request details for debugging
+                    console.log('Sending request to:', scriptUrl);
+                    
+                    // Send the form data
+                    xhr.send(formData);
+                    
+                    // Log that the request was sent
+                    console.log('Request sent successfully');
+                } catch (e) {
+                    // Catch any errors that occur during request setup
+                    console.error('Error setting up request:', e);
+                    showErrorMessage(sponsorForm, 'Error setting up request: ' + e.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-                
-                // Log the request details for debugging
-                console.log('Sending request to:', scriptUrl);
-                
-                // Send the form data
-                xhr.send(formData);
-                
-                // Log that the request was sent
-                console.log('Request sent successfully');
-            } catch (e) {
-                // Catch any errors that occur during request setup
-                console.error('Error setting up request:', e);
-                showErrorMessage(sponsorForm, 'Error setting up request: ' + e.message);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
             }
         });
     }
@@ -210,111 +241,141 @@ function initFormHandlers() {
                 formData.append('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
-            const xhr = new XMLHttpRequest();
+            // Detect if this is an iPhone SE or older iPhone
+            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                (navigator.userAgent.includes('iPhone OS 9') || 
+                 navigator.userAgent.includes('iPhone OS 10') || 
+                 navigator.userAgent.includes('iPhone OS 11') || 
+                 navigator.userAgent.includes('iPhone OS 12') || 
+                 navigator.userAgent.includes('iPhone OS 13') ||
+                 navigator.userAgent.includes('iPhone SE'));
             
-            // Set up event listeners
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            if (data.success) {
-                                // Show success message
-                                showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
-                                
-                                // Reset form
-                                speakingForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
-                            }
-                        } catch (e) {
-                            showErrorMessage(speakingForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
-                        }
+            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
+            if (isOlderIPhone) {
+                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                
+                // Use Fetch API for iPhone SE
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    referrerPolicy: 'no-referrer'
+                })
+                .then(response => {
+                    console.log('Fetch response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch response data:', data);
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        speakingForm.reset();
                     } else {
-                        showErrorMessage(speakingForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        // Show error message
+                        showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
                     }
                     
                     // Reset button state
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
-                }
-            };
-            
-            xhr.onerror = function(e) {
-                // Get detailed error information
-                const errorDetails = {
-                    readyState: xhr.readyState,
-                    status: xhr.status,
-                    statusText: xhr.statusText || 'No status text',
-                    responseType: xhr.responseType,
-                    responseURL: xhr.responseURL || 'No response URL',
-                    errorEvent: e ? e.type : 'No event details'
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showErrorMessage(speakingForm, 'Error with Fetch API: ' + error.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            } else {
+                // Use XMLHttpRequest for modern devices
+                const xhr = new XMLHttpRequest();
+                
+                // Set up event listeners
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    // Show success message
+                                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                                    
+                                    // Reset form
+                                    speakingForm.reset();
+                                } else {
+                                    // Show error message
+                                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
+                                }
+                            } catch (e) {
+                                showErrorMessage(speakingForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            }
+                        } else {
+                            showErrorMessage(speakingForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                        
+                        // Reset button state
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                    }
                 };
                 
-                console.error('XHR Error Details:', errorDetails);
-                
-                // Special handling for iPhone SE
-                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                    showErrorMessage(speakingForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
-                } else {
-                    showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
-                }
-                
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            xhr.ontimeout = function() {
-                showErrorMessage(speakingForm, 'Request timed out. Please try again.');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            // Add additional headers and settings for better mobile compatibility
-            try {
-                // Detect if this is an iPhone SE or older iPhone
-                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                    (navigator.userAgent.includes('iPhone OS 9') || 
-                     navigator.userAgent.includes('iPhone OS 10') || 
-                     navigator.userAgent.includes('iPhone OS 11') || 
-                     navigator.userAgent.includes('iPhone OS 12') || 
-                     navigator.userAgent.includes('iPhone OS 13'));
-                
-                // Use a different approach for older iPhones
-                if (isOlderIPhone) {
-                    console.log('Detected older iPhone, using compatibility mode');
+                xhr.onerror = function(e) {
+                    // Get detailed error information
+                    const errorDetails = {
+                        readyState: xhr.readyState,
+                        status: xhr.status,
+                        statusText: xhr.statusText || 'No status text',
+                        responseType: xhr.responseType,
+                        responseURL: xhr.responseURL || 'No response URL',
+                        errorEvent: e ? e.type : 'No event details'
+                    };
                     
-                    // For older iPhones, use a simpler approach without custom headers
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    console.error('XHR Error Details:', errorDetails);
                     
-                    // Don't set custom headers for older iPhones
-                    // This can sometimes cause issues with CORS
-                } else {
-                    // Standard approach for modern devices
+                    // Special handling for iPhone SE
+                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                        showErrorMessage(speakingForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    } else {
+                        showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                    }
+                    
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                xhr.ontimeout = function() {
+                    showErrorMessage(speakingForm, 'Request timed out. Please try again.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                // Add additional headers and settings for better mobile compatibility
+                try {
                     xhr.open('POST', scriptUrl, true);
                     xhr.timeout = 30000; // 30 seconds timeout
                     
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    
+                    // Log the request details for debugging
+                    console.log('Sending request to:', scriptUrl);
+                    
+                    // Send the form data
+                    xhr.send(formData);
+                    
+                    // Log that the request was sent
+                    console.log('Request sent successfully');
+                } catch (e) {
+                    // Catch any errors that occur during request setup
+                    console.error('Error setting up request:', e);
+                    showErrorMessage(speakingForm, 'Error setting up request: ' + e.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-                
-                // Log the request details for debugging
-                console.log('Sending request to:', scriptUrl);
-                
-                // Send the form data
-                xhr.send(formData);
-                
-                // Log that the request was sent
-                console.log('Request sent successfully');
-            } catch (e) {
-                // Catch any errors that occur during request setup
-                console.error('Error setting up request:', e);
-                showErrorMessage(speakingForm, 'Error setting up request: ' + e.message);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
             }
         });
     }
@@ -364,111 +425,141 @@ function initFormHandlers() {
                 formData.append('network_rtt', navigator.connection.rtt || 'unknown');
             }
             
-            // Use XMLHttpRequest instead of fetch for better compatibility on mobile
-            const xhr = new XMLHttpRequest();
+            // Detect if this is an iPhone SE or older iPhone
+            const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
+                (navigator.userAgent.includes('iPhone OS 9') || 
+                 navigator.userAgent.includes('iPhone OS 10') || 
+                 navigator.userAgent.includes('iPhone OS 11') || 
+                 navigator.userAgent.includes('iPhone OS 12') || 
+                 navigator.userAgent.includes('iPhone OS 13') ||
+                 navigator.userAgent.includes('iPhone SE'));
             
-            // Set up event listeners
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            const data = JSON.parse(xhr.responseText);
-                            if (data.success) {
-                                // Show success message
-                                showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
-                                
-                                // Reset form
-                                registrationForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
-                            }
-                        } catch (e) {
-                            showErrorMessage(registrationForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
-                        }
+            // For iPhone SE and older iPhones, use Fetch API instead of XMLHttpRequest
+            if (isOlderIPhone) {
+                console.log('Detected iPhone SE or older iPhone, using Fetch API');
+                
+                // Use Fetch API for iPhone SE
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    referrerPolicy: 'no-referrer'
+                })
+                .then(response => {
+                    console.log('Fetch response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch response data:', data);
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        registrationForm.reset();
                     } else {
-                        showErrorMessage(registrationForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        // Show error message
+                        showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
                     }
                     
                     // Reset button state
                     submitBtn.innerHTML = originalBtnText;
                     submitBtn.disabled = false;
-                }
-            };
-            
-            xhr.onerror = function(e) {
-                // Get detailed error information
-                const errorDetails = {
-                    readyState: xhr.readyState,
-                    status: xhr.status,
-                    statusText: xhr.statusText || 'No status text',
-                    responseType: xhr.responseType,
-                    responseURL: xhr.responseURL || 'No response URL',
-                    errorEvent: e ? e.type : 'No event details'
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showErrorMessage(registrationForm, 'Error with Fetch API: ' + error.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            } else {
+                // Use XMLHttpRequest for modern devices
+                const xhr = new XMLHttpRequest();
+                
+                // Set up event listeners
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data.success) {
+                                    // Show success message
+                                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                                    
+                                    // Reset form
+                                    registrationForm.reset();
+                                } else {
+                                    // Show error message
+                                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
+                                }
+                            } catch (e) {
+                                showErrorMessage(registrationForm, 'Error parsing response: ' + e.message + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                            }
+                        } else {
+                            showErrorMessage(registrationForm, 'Server error: ' + xhr.status + ' ' + xhr.statusText + '<br>Response: ' + xhr.responseText.substring(0, 200));
+                        }
+                        
+                        // Reset button state
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.disabled = false;
+                    }
                 };
                 
-                console.error('XHR Error Details:', errorDetails);
-                
-                // Special handling for iPhone SE
-                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
-                    showErrorMessage(registrationForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
-                } else {
-                    showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
-                }
-                
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            xhr.ontimeout = function() {
-                showErrorMessage(registrationForm, 'Request timed out. Please try again.');
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            };
-            
-            // Add additional headers and settings for better mobile compatibility
-            try {
-                // Detect if this is an iPhone SE or older iPhone
-                const isOlderIPhone = navigator.userAgent.includes('iPhone') && 
-                    (navigator.userAgent.includes('iPhone OS 9') || 
-                     navigator.userAgent.includes('iPhone OS 10') || 
-                     navigator.userAgent.includes('iPhone OS 11') || 
-                     navigator.userAgent.includes('iPhone OS 12') || 
-                     navigator.userAgent.includes('iPhone OS 13'));
-                
-                // Use a different approach for older iPhones
-                if (isOlderIPhone) {
-                    console.log('Detected older iPhone, using compatibility mode');
+                xhr.onerror = function(e) {
+                    // Get detailed error information
+                    const errorDetails = {
+                        readyState: xhr.readyState,
+                        status: xhr.status,
+                        statusText: xhr.statusText || 'No status text',
+                        responseType: xhr.responseType,
+                        responseURL: xhr.responseURL || 'No response URL',
+                        errorEvent: e ? e.type : 'No event details'
+                    };
                     
-                    // For older iPhones, use a simpler approach without custom headers
-                    xhr.open('POST', scriptUrl, true);
-                    xhr.timeout = 60000; // 60 seconds timeout for slower connections
+                    console.error('XHR Error Details:', errorDetails);
                     
-                    // Don't set custom headers for older iPhones
-                    // This can sometimes cause issues with CORS
-                } else {
-                    // Standard approach for modern devices
+                    // Special handling for iPhone SE
+                    if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                        showErrorMessage(registrationForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                    } else {
+                        showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                    }
+                    
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                xhr.ontimeout = function() {
+                    showErrorMessage(registrationForm, 'Request timed out. Please try again.');
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                };
+                
+                // Add additional headers and settings for better mobile compatibility
+                try {
                     xhr.open('POST', scriptUrl, true);
                     xhr.timeout = 30000; // 30 seconds timeout
                     
                     // Add a specific header to identify mobile submissions
                     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    
+                    // Log the request details for debugging
+                    console.log('Sending request to:', scriptUrl);
+                    
+                    // Send the form data
+                    xhr.send(formData);
+                    
+                    // Log that the request was sent
+                    console.log('Request sent successfully');
+                } catch (e) {
+                    // Catch any errors that occur during request setup
+                    console.error('Error setting up request:', e);
+                    showErrorMessage(registrationForm, 'Error setting up request: ' + e.message);
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
                 }
-                
-                // Log the request details for debugging
-                console.log('Sending request to:', scriptUrl);
-                
-                // Send the form data
-                xhr.send(formData);
-                
-                // Log that the request was sent
-                console.log('Request sent successfully');
-            } catch (e) {
-                // Catch any errors that occur during request setup
-                console.error('Error setting up request:', e);
-                showErrorMessage(registrationForm, 'Error setting up request: ' + e.message);
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
             }
         });
     }
