@@ -1,591 +1,174 @@
 /**
  * Form Handler for Sponsorship, Speaker, and Registration Forms
  * Handles form submissions using PHP backend
- * With improved compatibility for all devices including iOS
+ * With simplified approach for maximum compatibility across all devices including iOS
  */
 
 // Initialize form handlers immediately
-function initializeFormHandlers() {
-    document.addEventListener('DOMContentLoaded', function() {
-        initFormHandlers();
-    });
-}
+document.addEventListener('DOMContentLoaded', function() {
+    initFormHandlers();
+});
 
 // Function to handle form submissions
 function initFormHandlers() {
+    // Helper function to handle form submissions
+    function submitForm(form, endpoint, successMessage) {
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+        
+        // Create form data from the form
+        const formData = new FormData(form);
+        
+        // Add device info
+        formData.append('device_info', navigator.userAgent);
+        
+        // Determine the submit URL based on hostname
+        const host = window.location.hostname;
+        const isLocal = host === 'localhost' || host === '127.0.0.1';
+        let submitUrl = isLocal ? 'http://localhost/HRD-Conference/public/' + endpoint : '/' + endpoint;
+        
+        // Create a simple XMLHttpRequest (most compatible with all browsers)
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', submitUrl, true);
+        
+        // Set timeout - shorter timeout for better UX
+        xhr.timeout = 10000; // 10 seconds
+        
+        // Setup completion handler
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    // Try to parse JSON response
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        showSuccessMessage(form, successMessage || 'Your submission has been successfully received.');
+                        form.reset();
+                    } else {
+                        showErrorMessage(form, response.message || 'There was an error processing your submission. Please try again.');
+                    }
+                } catch (e) {
+                    // If not JSON, check for success string in response
+                    if (xhr.responseText.includes('success') && xhr.responseText.includes('true')) {
+                        showSuccessMessage(form, successMessage || 'Your submission has been successfully received.');
+                        form.reset();
+                    } else {
+                        showErrorMessage(form, 'There was a problem with the server response. Please try again later.');
+                        console.error('Response parsing error:', e);
+                    }
+                }
+            } else {
+                showErrorMessage(form, 'Server error (' + xhr.status + '). Please try again later.');
+            }
+            
+            // Reset button state
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        };
+        
+        // Error handler
+        xhr.onerror = function() {
+            showErrorMessage(form, 'Network error. Please check your connection and try again.');
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        };
+        
+        // Timeout handler
+        xhr.ontimeout = function() {
+            showErrorMessage(form, 'Request is taking too long. Please try again later.');
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        };
+        
+        // Send the request
+        xhr.send(formData);
+        
+        return false; // Prevent form submission
+    }
     
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
     if (sponsorForm) {
         sponsorForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Get form data
-            const fullName = sponsorForm.querySelector('input[name="fullName"]').value;
-            const email = sponsorForm.querySelector('input[name="email"]').value;
-            const company = sponsorForm.querySelector('input[name="company"]').value;
-            const jobTitle = sponsorForm.querySelector('input[name="jobTitle"]').value;
-            const contactNumber = sponsorForm.querySelector('input[name="contactNumber"]').value;
-            const interest = sponsorForm.querySelector('select[name="interest"]').value;
-            
-            // Show loading state
-            const submitBtn = sponsorForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            // Create a hidden iframe for form submission
-            let iframe = document.getElementById('hidden-iframe');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'hidden-iframe';
-                iframe.name = 'hidden-iframe';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-            }
-            
-            // Create a temporary form for submission
-            const tempForm = document.createElement('form');
-            tempForm.method = 'POST';
-            tempForm.target = 'hidden-iframe';
-            
-            // Set the form action based on environment
-            const isProduction = window.location.hostname === 'hrdconference.com';
-            tempForm.action = isProduction 
-                ? 'https://hrdconference.com/store-sponsorship.php' 
-                : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
-            
-            // Add form fields
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = name;
-                input.value = value;
-                tempForm.appendChild(input);
-            };
-            
-            // Add all form fields
-            addField('fullName', fullName);
-            addField('email', email);
-            addField('company', company);
-            addField('jobTitle', jobTitle);
-            addField('contactNumber', contactNumber);
-            addField('interest', interest);
-            addField('device_info', navigator.userAgent);
-            
-            // Add network information if available
-            if (navigator.connection) {
-                addField('network_type', navigator.connection.type || 'unknown');
-                addField('network_downlink', navigator.connection.downlink || 'unknown');
-                addField('network_rtt', navigator.connection.rtt || 'unknown');
-            }
-            
-            // Add the form to the document
-            document.body.appendChild(tempForm);
-            
-            // Set up a timeout for form submission
-            const submissionTimeout = setTimeout(() => {
-                // Show timeout error but keep waiting
-                showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Still waiting for response...');
-                // Don't reset the button to allow the request to complete
-            }, 30000); // 30 seconds timeout
-            
-            // Listen for iframe load event
-            iframe.onload = function() {
-                clearTimeout(submissionTimeout);
-                
-                try {
-                    // Try to get response from iframe
-                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
-                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
-                    
-                    if (responseText) {
-                        try {
-                            const response = JSON.parse(responseText);
-                            
-                            if (response.success) {
-                                // Show success message
-                                showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
-                                sponsorForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(sponsorForm, 'There was a problem submitting your inquiry. Please try again later.');
-                            }
-                        } catch (e) {
-                            // JSON parse error
-                            showErrorMessage(sponsorForm, 'There was a problem processing your submission. Please try again later.');
-                        }
-                    } else {
-                        // Empty response
-                        showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                } catch (e) {
-                    // Cross-origin error or other issue
-                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show iOS device message
-                        const deviceMessage = `
-                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                                <p>For the best experience, please:</p>
-                                <ul>
-                                    <li>Try using a desktop or laptop computer</li>
-                                    <li>Use a device with a newer version of iOS</li>
-                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                                </ul>
-                            </div>
-                        `;
-                        showErrorMessage(sponsorForm, deviceMessage);
-                    } else {
-                        showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Handle iframe error
-            iframe.onerror = function() {
-                clearTimeout(submissionTimeout);
-                
-                // Show error message
-                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                    // Show iOS device message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(sponsorForm, deviceMessage);
-                } else {
-                    showErrorMessage(sponsorForm, 'There was a problem with your submission. Please try again later.');
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Submit the form
-            tempForm.submit();
+            submitForm(sponsorForm, 'store-sponsorship.php', 'Your sponsorship inquiry has been successfully submitted!');
         });
     }
-
-    // Speaking Opportunity Form Handler
+    
+    // Speaker Form Handler
     const speakingForm = document.getElementById('speaking-form');
     if (speakingForm) {
         speakingForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Get form data
-            const fullName = speakingForm.querySelector('input[placeholder="Full Name"]').value;
-            const email = speakingForm.querySelector('input[placeholder="Email Address"]').value;
-            const company = speakingForm.querySelector('input[placeholder="Company Name"]').value;
-            const jobTitle = speakingForm.querySelector('input[placeholder="Job Title"]').value;
-            const contactNumber = speakingForm.querySelector('input[placeholder="Contact Number"]').value;
-            
-            // Show loading state
-            const submitBtn = speakingForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            // Create a hidden iframe for form submission
-            let iframe = document.getElementById('hidden-iframe-speaker');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'hidden-iframe-speaker';
-                iframe.name = 'hidden-iframe-speaker';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-            }
-            
-            // Create a temporary form for submission
-            const tempForm = document.createElement('form');
-            tempForm.method = 'POST';
-            tempForm.target = 'hidden-iframe-speaker';
-            
-            // Set the form action based on environment
-            const isProduction = window.location.hostname === 'hrdconference.com';
-            tempForm.action = isProduction 
-                ? 'https://hrdconference.com/store-speaker.php' 
-                : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
-            
-            // Add form fields
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = name;
-                input.value = value;
-                tempForm.appendChild(input);
-            };
-            
-            // Add all form fields
-            addField('fullName', fullName);
-            addField('email', email);
-            addField('company', company);
-            addField('jobTitle', jobTitle);
-            addField('contactNumber', contactNumber);
-            addField('device_info', navigator.userAgent);
-            
-            // Add network information if available
-            if (navigator.connection) {
-                addField('network_type', navigator.connection.type || 'unknown');
-                addField('network_downlink', navigator.connection.downlink || 'unknown');
-                addField('network_rtt', navigator.connection.rtt || 'unknown');
-            }
-            
-            // Add the form to the document
-            document.body.appendChild(tempForm);
-            
-            // Set up a timeout for form submission
-            const submissionTimeout = setTimeout(() => {
-                // Show timeout error but keep waiting
-                showErrorMessage(speakingForm, 'Your request is taking longer than expected. Still waiting for response...');
-                // Don't reset the button to allow the request to complete
-            }, 30000); // 30 seconds timeout
-            
-            // Listen for iframe load event
-            iframe.onload = function() {
-                clearTimeout(submissionTimeout);
-                
-                try {
-                    // Try to get response from iframe
-                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
-                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
-                    
-                    if (responseText) {
-                        try {
-                            const response = JSON.parse(responseText);
-                            
-                            if (response.success) {
-                                // Show success message
-                                showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
-                                speakingForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(speakingForm, 'There was a problem submitting your application. Please try again later.');
-                            }
-                        } catch (e) {
-                            // JSON parse error
-                            showErrorMessage(speakingForm, 'There was a problem processing your submission. Please try again later.');
-                        }
-                    } else {
-                        // Empty response
-                        showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                } catch (e) {
-                    // Cross-origin error or other issue
-                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show iOS device message
-                        const deviceMessage = `
-                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                                <p>For the best experience, please:</p>
-                                <ul>
-                                    <li>Try using a desktop or laptop computer</li>
-                                    <li>Use a device with a newer version of iOS</li>
-                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                                </ul>
-                            </div>
-                        `;
-                        showErrorMessage(speakingForm, deviceMessage);
-                    } else {
-                        showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Handle iframe error
-            iframe.onerror = function() {
-                clearTimeout(submissionTimeout);
-                
-                // Show error message
-                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                    // Show iOS device message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(speakingForm, deviceMessage);
-                } else {
-                    showErrorMessage(speakingForm, 'There was a problem with your submission. Please try again later.');
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Submit the form
-            tempForm.submit();
+            submitForm(speakingForm, 'store-speaker.php', 'Your speaking application has been successfully submitted!');
         });
     }
     
     // Registration Form Handler
-    const registrationForm = document.getElementById('pricing-form');
+    const registrationForm = document.getElementById('registration-form');
     if (registrationForm) {
         registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Get form data
-            const fullName = registrationForm.querySelector('input[placeholder="Full Name"]').value;
-            const email = registrationForm.querySelector('input[placeholder="Email Address"]').value;
-            const company = registrationForm.querySelector('input[placeholder="Company Name"]').value;
-            const jobTitle = registrationForm.querySelector('input[placeholder="Job Title"]').value;
-            const contactNumber = registrationForm.querySelector('input[placeholder="Contact Number"]').value;
-            const promoCode = registrationForm.querySelector('input[placeholder="Promo Code (optional)"]').value;
-            
-            // Show loading state
-            const submitBtn = registrationForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
-            
-            // Create a hidden iframe for form submission
-            let iframe = document.getElementById('hidden-iframe-registration');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'hidden-iframe-registration';
-                iframe.name = 'hidden-iframe-registration';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-            }
-            
-            // Create a temporary form for submission
-            const tempForm = document.createElement('form');
-            tempForm.method = 'POST';
-            tempForm.target = 'hidden-iframe-registration';
-            
-            // Set the form action based on environment
-            const isProduction = window.location.hostname === 'hrdconference.com';
-            tempForm.action = isProduction 
-                ? 'https://hrdconference.com/store-registration.php' 
-                : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
-            
-            // Add form fields
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = name;
-                input.value = value;
-                tempForm.appendChild(input);
-            };
-            
-            // Add all form fields
-            addField('fullName', fullName);
-            addField('email', email);
-            addField('company', company);
-            addField('jobTitle', jobTitle);
-            addField('contactNumber', contactNumber);
-            addField('promoCode', promoCode);
-            addField('device_info', navigator.userAgent);
-            
-            // Add network information if available
-            if (navigator.connection) {
-                addField('network_type', navigator.connection.type || 'unknown');
-                addField('network_downlink', navigator.connection.downlink || 'unknown');
-                addField('network_rtt', navigator.connection.rtt || 'unknown');
-            }
-            
-            // Add the form to the document
-            document.body.appendChild(tempForm);
-            
-            // Set up a timeout for form submission
-            const submissionTimeout = setTimeout(() => {
-                // Show timeout error but keep waiting
-                showErrorMessage(registrationForm, 'Your request is taking longer than expected. Still waiting for response...');
-                // Don't reset the button to allow the request to complete
-            }, 30000); // 30 seconds timeout
-            
-            // Listen for iframe load event
-            iframe.onload = function() {
-                clearTimeout(submissionTimeout);
-                
-                try {
-                    // Try to get response from iframe
-                    const iframeContent = iframe.contentDocument || iframe.contentWindow.document;
-                    const responseText = iframeContent.body.textContent || iframeContent.body.innerText;
-                    
-                    if (responseText) {
-                        try {
-                            const response = JSON.parse(responseText);
-                            
-                            if (response.success) {
-                                // Show success message
-                                showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
-                                registrationForm.reset();
-                            } else {
-                                // Show error message
-                                showErrorMessage(registrationForm, 'There was a problem submitting your registration. Please try again later.');
-                            }
-                        } catch (e) {
-                            // JSON parse error
-                            showErrorMessage(registrationForm, 'There was a problem processing your submission. Please try again later.');
-                        }
-                    } else {
-                        // Empty response
-                        showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                } catch (e) {
-                    // Cross-origin error or other issue
-                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                        // Show iOS device message
-                        const deviceMessage = `
-                            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                                <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                                <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                                <p>For the best experience, please:</p>
-                                <ul>
-                                    <li>Try using a desktop or laptop computer</li>
-                                    <li>Use a device with a newer version of iOS</li>
-                                    <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                                </ul>
-                            </div>
-                        `;
-                        showErrorMessage(registrationForm, deviceMessage);
-                    } else {
-                        showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
-                    }
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Handle iframe error
-            iframe.onerror = function() {
-                clearTimeout(submissionTimeout);
-                
-                // Show error message
-                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('iOS')) {
-                    // Show iOS device message
-                    const deviceMessage = `
-                        <div style="padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 15px;">
-                            <h4 style="margin-top: 0; color: #0056b3;">Device Compatibility Notice</h4>
-                            <p>We've detected that you're using an iOS device which may have compatibility issues with our form submission system.</p>
-                            <p>For the best experience, please:</p>
-                            <ul>
-                                <li>Try using a desktop or laptop computer</li>
-                                <li>Use a device with a newer version of iOS</li>
-                                <li>Contact us directly at <a href="mailto:admin@hrdconference.com">admin@hrdconference.com</a></li>
-                            </ul>
-                        </div>
-                    `;
-                    showErrorMessage(registrationForm, deviceMessage);
-                } else {
-                    showErrorMessage(registrationForm, 'There was a problem with your submission. Please try again later.');
-                }
-                
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-                
-                // Clean up
-                if (tempForm && tempForm.parentNode) {
-                    tempForm.parentNode.removeChild(tempForm);
-                }
-            };
-            
-            // Submit the form
-            tempForm.submit();
+            submitForm(registrationForm, 'store-registration.php', 'Your registration has been successfully submitted!');
         });
-    }
-    
-    // Helper functions for form feedback
-    function showSuccessMessage(form, customMessage) {
-        // Remove any existing messages
-        removeMessages(form);
-        
-        // Create success message
-        const successMessage = document.createElement('div');
-        successMessage.className = 'form-message success-message';
-        successMessage.innerHTML = customMessage || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
-        
-        // Insert after form
-        form.parentNode.insertBefore(successMessage, form.nextSibling);
-        
-        // Reset form
-        form.reset();
-        
-        // Remove message after 5 seconds
-        setTimeout(() => {
-            successMessage.remove();
-        }, 5000);
-    }
-    
-    function showErrorMessage(form, customMessage) {
-        // Remove any existing messages
-        removeMessages(form);
-        
-        // Create error message
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'form-message error-message';
-        errorMessage.innerHTML = customMessage || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
-        
-        // Insert after form
-        form.parentNode.insertBefore(errorMessage, form.nextSibling);
-        
-        // Remove message after 15 seconds
-        setTimeout(() => {
-            errorMessage.remove();
-        }, 15000); // Longer timeout for error messages to allow reading
-    }
-    
-    function removeMessages(form) {
-        // Remove any existing messages
-        const existingMessages = form.parentNode.querySelectorAll('.form-message');
-        existingMessages.forEach(message => message.remove());
     }
 }
 
-// Initialize form handlers
-initializeFormHandlers();
+// Helper functions for form feedback
+function showSuccessMessage(form, customMessage) {
+    // Remove any existing messages
+    removeMessages(form);
+    
+    // Create success message
+    const successMessage = document.createElement('div');
+    successMessage.className = 'form-message success-message';
+    successMessage.innerHTML = customMessage || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
+    
+    // Insert after form
+    form.parentNode.insertBefore(successMessage, form.nextSibling);
+    
+    // Remove message after 5 seconds
+    setTimeout(() => {
+        if (successMessage.parentNode) {
+            successMessage.parentNode.removeChild(successMessage);
+        }
+    }, 5000);
+}
+
+function showErrorMessage(form, customMessage) {
+    // Remove any existing messages
+    removeMessages(form);
+    
+    // Create error message
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'form-message error-message';
+    errorMessage.innerHTML = customMessage || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
+    
+    // Insert after form
+    form.parentNode.insertBefore(errorMessage, form.nextSibling);
+    
+    // Remove message after 15 seconds
+    setTimeout(() => {
+        if (errorMessage.parentNode) {
+            errorMessage.parentNode.removeChild(errorMessage);
+        }
+    }, 15000); // Longer timeout for error messages to allow reading
+}
+
+function removeMessages(form) {
+    // Remove any existing messages
+    const existingMessages = form.parentNode.querySelectorAll('.form-message');
+    existingMessages.forEach(message => {
+        if (message.parentNode) {
+            message.parentNode.removeChild(message);
+        }
+    });
+}
+
+// Function to log errors to server
+function logErrorToServer(formType, error) {
+    console.error('Form submission error:', formType, error);
+    // This function can be expanded to send error logs to the server if needed
+}
