@@ -9,16 +9,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Enable email logging
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/../email_logs.log');
-
-// Helper function for email logging
-function logEmailActivity($message) {
-    $timestamp = date('Y-m-d H:i:s');
-    error_log("[$timestamp] $message");
-}
-
 // Check if PHPMailer is already installed via Composer
 if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
     require_once __DIR__ . '/../../vendor/autoload.php';
@@ -65,9 +55,6 @@ use PHPMailer\PHPMailer\SMTP;
  * @return array Result of the email sending operation ['success' => bool, 'message' => string]
  */
 function sendEmail($recipientEmail, $recipientName, $subject, $htmlBody, $plainTextBody = '', $replyTo = null, $attachments = []) {
-    // Log email sending attempt
-    $recipients = is_array($recipientEmail) ? implode(', ', $recipientEmail) : $recipientEmail;
-    logEmailActivity("Attempting to send email to: $recipients, Subject: $subject");
     // Create a new PHPMailer instance
     $mail = new PHPMailer(true);
     
@@ -127,18 +114,12 @@ function sendEmail($recipientEmail, $recipientName, $subject, $htmlBody, $plainT
         // Send the email
         $mail->send();
         
-        // Log success
-        logEmailActivity("Email sent successfully to: $recipients, Subject: $subject");
-        
         return [
             'success' => true,
             'message' => 'Email has been sent successfully'
         ];
         
     } catch (Exception $e) {
-        // Log error
-        logEmailActivity("Email sending failed to: $recipients, Subject: $subject, Error: {$mail->ErrorInfo}");
-        
         return [
             'success' => false,
             'message' => "Email could not be sent. Mailer Error: {$mail->ErrorInfo}"
