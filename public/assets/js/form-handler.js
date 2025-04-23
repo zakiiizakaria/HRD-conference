@@ -118,18 +118,24 @@ function initFormHandlers() {
             
             // Get form data
             const formData = new FormData(sponsorForm);
-            const fullName = formData.get('fullName');
-            const email = formData.get('email');
-            const company = formData.get('company');
-            const jobTitle = formData.get('jobTitle');
-            const contactNumber = formData.get('contactNumber');
-            const interest = formData.get('interest');
             
-            // Validate form
-            if (!fullName || !email || !company || !jobTitle || !contactNumber || !interest) {
-                showErrorMessage(sponsorForm, 'Please fill in all required fields.');
-                return;
-            }
+            // Get input elements directly to properly check their values
+            const fullNameInput = sponsorForm.querySelector('input[name="fullName"]');
+            const emailInput = sponsorForm.querySelector('input[name="email"]');
+            const companyInput = sponsorForm.querySelector('input[name="company"]');
+            const jobTitleInput = sponsorForm.querySelector('input[name="jobTitle"]');
+            const contactNumberInput = sponsorForm.querySelector('input[name="contactNumber"]');
+            const interestInput = sponsorForm.querySelector('select[name="interest"]');
+            
+            // Get values from inputs
+            const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim() : '';
+            const company = companyInput ? companyInput.value.trim() : '';
+            const jobTitle = jobTitleInput ? jobTitleInput.value.trim() : '';
+            const contactNumber = contactNumberInput ? contactNumberInput.value.trim() : '';
+            const interest = interestInput ? interestInput.value.trim() : '';
+            
+            // Form validation is now handled in the submitFormData function
             
             // Append form data
             formData.append('fullName', fullName);
@@ -182,11 +188,7 @@ function initFormHandlers() {
             const jobTitle = formData.get('jobTitle');
             const contactNumber = formData.get('contactNumber');
             
-            // Validate form
-            if (!fullName || !email || !company || !jobTitle || !contactNumber) {
-                showErrorMessage(speakingForm, 'Please fill in all required fields.');
-                return;
-            }
+            // Form validation is now handled in the submitFormData function
             
             // Append form data
             formData.append('fullName', fullName);
@@ -233,18 +235,24 @@ function initFormHandlers() {
             
             // Get form data
             const formData = new FormData(registrationForm);
-            const fullName = formData.get('fullName');
-            const email = formData.get('email');
-            const company = formData.get('company');
-            const jobTitle = formData.get('jobTitle');
-            const contactNumber = formData.get('contactNumber');
-            const promoCode = formData.get('promoCode') || ''; // Optional
             
-            // Validate form
-            if (!fullName || !email || !company || !jobTitle || !contactNumber) {
-                showErrorMessage(registrationForm, 'Please fill in all required fields.');
-                return;
-            }
+            // Get input elements directly to properly check their values
+            const fullNameInput = registrationForm.querySelector('input[placeholder="Full Name"]');
+            const emailInput = registrationForm.querySelector('input[placeholder="Email Address"]');
+            const companyInput = registrationForm.querySelector('input[placeholder="Company Name"]');
+            const jobTitleInput = registrationForm.querySelector('input[placeholder="Job Title"]');
+            const contactNumberInput = registrationForm.querySelector('input[placeholder="Contact Number"]');
+            const promoCodeInput = registrationForm.querySelector('input[placeholder="Promo Code (optional)"]');
+            
+            // Get values from inputs
+            const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim() : '';
+            const company = companyInput ? companyInput.value.trim() : '';
+            const jobTitle = jobTitleInput ? jobTitleInput.value.trim() : '';
+            const contactNumber = contactNumberInput ? contactNumberInput.value.trim() : '';
+            const promoCode = promoCodeInput ? promoCodeInput.value.trim() : ''; // Optional
+            
+            // Form validation is now handled in the submitFormData function
             
             // Append form data
             formData.append('fullName', fullName);
@@ -329,8 +337,73 @@ function initFormHandlers() {
         existingMessages.forEach(message => message.remove());
     }
     
+    // Function to validate form fields before submission
+    function validateForm(form) {
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Determine which form we're validating
+        const isRegistrationForm = form.id === 'pricing-form';
+        const isSpeakingForm = form.id === 'speaking-form';
+        const isSponsorForm = form.id === 'sponsor-form';
+        
+        // Get all required inputs based on form type
+        let requiredFields = [];
+        
+        if (isRegistrationForm) {
+            requiredFields = [
+                { element: form.querySelector('input[placeholder="Full Name"]'), name: 'Full Name' },
+                { element: form.querySelector('input[placeholder="Email Address"]'), name: 'Email Address' },
+                { element: form.querySelector('input[placeholder="Company Name"]'), name: 'Company Name' },
+                { element: form.querySelector('input[placeholder="Job Title"]'), name: 'Job Title' },
+                { element: form.querySelector('input[placeholder="Contact Number"]'), name: 'Contact Number' }
+            ];
+        } else if (isSpeakingForm) {
+            requiredFields = [
+                { element: form.querySelector('input[placeholder="Full Name"]'), name: 'Full Name' },
+                { element: form.querySelector('input[placeholder="Email Address"]'), name: 'Email Address' },
+                { element: form.querySelector('input[placeholder="Company Name"]'), name: 'Company Name' },
+                { element: form.querySelector('input[placeholder="Job Title"]'), name: 'Job Title' },
+                { element: form.querySelector('input[placeholder="Contact Number"]'), name: 'Contact Number' },
+                { element: form.querySelector('textarea[placeholder="Speaking Topic"]'), name: 'Speaking Topic' }
+            ];
+        } else if (isSponsorForm) {
+            requiredFields = [
+                { element: form.querySelector('input[name="fullName"]'), name: 'Full Name' },
+                { element: form.querySelector('input[name="email"]'), name: 'Email Address' },
+                { element: form.querySelector('input[name="company"]'), name: 'Company Name' },
+                { element: form.querySelector('input[name="jobTitle"]'), name: 'Job Title' },
+                { element: form.querySelector('input[name="contactNumber"]'), name: 'Contact Number' },
+                { element: form.querySelector('select[name="interest"]'), name: 'Interest Level' }
+            ];
+        }
+        
+        // Check each required field
+        const missingFields = [];
+        for (const field of requiredFields) {
+            if (!field.element || !field.element.value.trim()) {
+                isValid = false;
+                missingFields.push(field.name);
+            }
+        }
+        
+        // Create error message if needed
+        if (missingFields.length > 0) {
+            errorMessage = 'Please fill in the following required fields: ' + missingFields.join(', ');
+        }
+        
+        return { isValid, errorMessage };
+    }
+    
     // Function to submit form with optimized settings for mobile
     async function submitFormData(form, url, formData) {
+        // First validate the form
+        const validation = validateForm(form);
+        if (!validation.isValid) {
+            showErrorMessage(form, validation.errorMessage);
+            return Promise.reject(new Error(validation.errorMessage));
+        }
+        
         // Show loading indicator
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerHTML;
