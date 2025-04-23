@@ -9,25 +9,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Enable custom error logging
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/form_errors.log');
-
-// Log form submission attempt
-error_log("[" . date('Y-m-d H:i:s') . "] Form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
-
 // Get the requesting origin
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 
-// Set headers to handle AJAX requests and CORS - more permissive for international users
+// Set headers to handle AJAX requests and CORS
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -69,8 +59,6 @@ $response['debug']['post_data'] = $_POST;
 $response['debug']['environment'] = $isLocalEnvironment ? 'local' : 'production';
 
 // Include the mail helper
-// Using require_once for the mail helper as it's not a proper namespace
-// that can be imported with 'use' statements
 require_once __DIR__ . '/includes/mail-helper.php';
 
 // Only process POST requests
@@ -177,24 +165,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['debug']['error_type'] = 'PDOException';
         $response['debug']['error_message'] = $e->getMessage();
         $response['debug']['error_trace'] = $e->getTraceAsString();
-        
-        // Log detailed error information
-        error_log("[" . date('Y-m-d H:i:s') . "] PDO Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     } catch (InvalidArgumentException $e) {
         $response['message'] = $e->getMessage();
         $response['debug']['error_type'] = 'InvalidArgumentException';
         $response['debug']['error_message'] = $e->getMessage();
-        
-        // Log validation error
-        error_log("[" . date('Y-m-d H:i:s') . "] Validation Error: " . $e->getMessage());
     } catch (Exception $e) {
         $response['message'] = 'Unexpected error: ' . $e->getMessage();
         $response['debug']['error_type'] = 'Exception';
         $response['debug']['error_message'] = $e->getMessage();
         $response['debug']['error_trace'] = $e->getTraceAsString();
-        
-        // Log general exception
-        error_log("[" . date('Y-m-d H:i:s') . "] Unexpected Exception: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
     }
 } else {
     $response['message'] = 'Invalid request method';
