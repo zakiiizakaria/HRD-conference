@@ -13,11 +13,9 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/form_errors.log');
 
-// Define timestamp format constant
-define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
-
 // Log form submission attempt
-error_log("[" . date(TIMESTAMP_FORMAT) . "] Registration form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
+$timestamp = date('Y-m-d H:i:s');
+error_log("[$timestamp] Registration form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
@@ -139,16 +137,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $promoCode
         ]);
         
-        // Get the inserted ID
-        $insertId = $pdo->lastInsertId();
-        
-        error_log("[" . date(TIMESTAMP_FORMAT) . "] Registration data inserted successfully. ID: $insertId");
         $response['debug']['insert'] = "Data inserted successfully";
         
         // Get ticket type for email
         $ticketType = $_POST['ticketType'] ?? 'Standard';
         
-        // Prepare form data for email
+        // Send email notification to admin
         $formData = [
             'fullName' => $fullName,
             'email' => $email,
@@ -159,57 +153,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'promoCode' => $promoCode
         ];
         
-        // Set success response for database storage
+        $adminEmailHtml = createRegistrationEmailTemplate($formData);
+        $adminEmailResult = sendEmail(
+            [
+                'admin@roomofleaders.com',
+                'areez@roomofleaders.com'
+            ],
+            'HRD Conference Admin',
+            'New Registration from ' . $fullName,
+            $adminEmailHtml,
+            '',
+            ['email' => $email, 'name' => $fullName]
+        );
+        
+        // Send confirmation email to user
+        $userEmailHtml = createConfirmationEmailTemplate('registration', $formData);
+        $userEmailResult = sendEmail(
+            $email,
+            $fullName,
+            'HRD Conference - Registration Confirmation',
+            $userEmailHtml
+        );
+        
+        $response['debug']['admin_email'] = $adminEmailResult;
+        $response['debug']['user_email'] = $userEmailResult;
+        
         $response['success'] = true;
-        $response['message'] = 'Registration successfully stored in database';
+        $response['message'] = 'Registration successfully stored in database and email notifications sent';
         $response['data'] = [
-            'id' => $insertId,
+            'id' => $pdo->lastInsertId(),
             'fullName' => $fullName,
             'email' => $email
         ];
-        
-        // Now handle email sending separately
-        try {
-            error_log("[" . date(TIMESTAMP_FORMAT) . "] Starting email sending process for registration ID: $insertId");
-            
-            // Send email notification to admin
-            $adminEmailHtml = createRegistrationEmailTemplate($formData);
-            $adminEmailResult = sendEmail(
-                [
-                    'admin@roomofleaders.com',
-                    'areez@roomofleaders.com'
-                ],
-                'HRD Conference Admin',
-                'New Registration from ' . $fullName,
-                $adminEmailHtml,
-                '',
-                ['email' => $email, 'name' => $fullName]
-            );
-            
-            // Send confirmation email to user
-            $userEmailHtml = createConfirmationEmailTemplate('registration', $formData);
-            $userEmailResult = sendEmail(
-                $email,
-                $fullName,
-                'HRD Conference - Registration Confirmation',
-                $userEmailHtml
-            );
-            
-            $response['debug']['admin_email'] = $adminEmailResult;
-            $response['debug']['user_email'] = $userEmailResult;
-            
-            // Log email status but don't update UI response message
-            if ($adminEmailResult['success'] && $userEmailResult['success']) {
-                error_log("[" . date(TIMESTAMP_FORMAT) . "] Email notifications sent successfully for registration ID: $insertId");
-            } else {
-                error_log("[" . date(TIMESTAMP_FORMAT) . "] Issue sending email notifications for registration ID: $insertId");
-            }
-            
-        } catch (Exception $emailException) {
-            // Log email error but don't affect the main response success
-            error_log("[" . date(TIMESTAMP_FORMAT) . "] Email exception for registration ID: $insertId - " . $emailException->getMessage());
-            $response['debug']['email_error'] = $emailException->getMessage();
-        }
         
     } catch (PDOException $e) {
         $response['message'] = 'Database error: ' . $e->getMessage();
