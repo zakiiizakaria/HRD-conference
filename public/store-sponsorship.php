@@ -9,16 +9,6 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Enable custom error logging
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/form_errors.log');
-
-// Define timestamp format constant
-define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
-
-// Log form submission attempt
-error_log("[" . date(TIMESTAMP_FORMAT) . "] Sponsorship form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
-
 // Get the requesting origin
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 
@@ -31,6 +21,16 @@ header('Access-Control-Allow-Credentials: true');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
+
+// Enable custom error logging
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/form_errors.log');
+
+// Define timestamp format constant
+define('TIMESTAMP_FORMAT', 'Y-m-d H:i:s');
+
+// Log form submission attempt
+error_log("[" . date(TIMESTAMP_FORMAT) . "] Sponsorship form submission attempt from IP: " . $_SERVER['REMOTE_ADDR'] . ", User Agent: " . $_SERVER['HTTP_USER_AGENT']);
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

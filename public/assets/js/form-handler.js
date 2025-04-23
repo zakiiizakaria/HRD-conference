@@ -48,8 +48,15 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
                 
-            // Add debug info
+            // Add detailed debug info
             formData.append('device_info', navigator.userAgent);
+            
+            // Add network information if available
+            if (navigator.connection) {
+                formData.append('network_type', navigator.connection.type || 'unknown');
+                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
+                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+            }
             
             // Use XMLHttpRequest instead of fetch for better compatibility on mobile
             const xhr = new XMLHttpRequest();
@@ -83,8 +90,26 @@ function initFormHandlers() {
                 }
             };
             
-            xhr.onerror = function() {
-                showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
+            xhr.onerror = function(e) {
+                // Get detailed error information
+                const errorDetails = {
+                    readyState: xhr.readyState,
+                    status: xhr.status,
+                    statusText: xhr.statusText || 'No status text',
+                    responseType: xhr.responseType,
+                    responseURL: xhr.responseURL || 'No response URL',
+                    errorEvent: e ? e.type : 'No event details'
+                };
+                
+                console.error('XHR Error Details:', errorDetails);
+                
+                // Special handling for iPhone SE
+                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                    showErrorMessage(sponsorForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                } else {
+                    showErrorMessage(sponsorForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                }
+                
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             };
@@ -95,10 +120,30 @@ function initFormHandlers() {
                 submitBtn.disabled = false;
             };
             
-            // Open and send the request
-            xhr.open('POST', scriptUrl, true);
-            xhr.timeout = 30000; // 30 seconds timeout
-            xhr.send(formData);
+            // Add additional headers and settings for better mobile compatibility
+            try {
+                // Open and send the request
+                xhr.open('POST', scriptUrl, true);
+                xhr.timeout = 30000; // 30 seconds timeout
+                
+                // Log the request details for debugging
+                console.log('Sending request to:', scriptUrl);
+                
+                // Add a specific header to identify mobile submissions
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                
+                // Send the form data
+                xhr.send(formData);
+                
+                // Log that the request was sent
+                console.log('Request sent successfully');
+            } catch (e) {
+                // Catch any errors that occur during request setup
+                console.error('Error setting up request:', e);
+                showErrorMessage(sponsorForm, 'Error setting up request: ' + e.message);
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
         });
     }
 
@@ -135,8 +180,15 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
                 
-            // Add debug info
+            // Add detailed debug info
             formData.append('device_info', navigator.userAgent);
+            
+            // Add network information if available
+            if (navigator.connection) {
+                formData.append('network_type', navigator.connection.type || 'unknown');
+                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
+                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+            }
             
             // Use XMLHttpRequest instead of fetch for better compatibility on mobile
             const xhr = new XMLHttpRequest();
@@ -170,8 +222,26 @@ function initFormHandlers() {
                 }
             };
             
-            xhr.onerror = function() {
-                showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
+            xhr.onerror = function(e) {
+                // Get detailed error information
+                const errorDetails = {
+                    readyState: xhr.readyState,
+                    status: xhr.status,
+                    statusText: xhr.statusText || 'No status text',
+                    responseType: xhr.responseType,
+                    responseURL: xhr.responseURL || 'No response URL',
+                    errorEvent: e ? e.type : 'No event details'
+                };
+                
+                console.error('XHR Error Details:', errorDetails);
+                
+                // Special handling for iPhone SE
+                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                    showErrorMessage(speakingForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                } else {
+                    showErrorMessage(speakingForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                }
+                
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             };
@@ -182,10 +252,30 @@ function initFormHandlers() {
                 submitBtn.disabled = false;
             };
             
-            // Open and send the request
-            xhr.open('POST', scriptUrl, true);
-            xhr.timeout = 30000; // 30 seconds timeout
-            xhr.send(formData);
+            // Add additional headers and settings for better mobile compatibility
+            try {
+                // Open and send the request
+                xhr.open('POST', scriptUrl, true);
+                xhr.timeout = 30000; // 30 seconds timeout
+                
+                // Log the request details for debugging
+                console.log('Sending request to:', scriptUrl);
+                
+                // Add a specific header to identify mobile submissions
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                
+                // Send the form data
+                xhr.send(formData);
+                
+                // Log that the request was sent
+                console.log('Request sent successfully');
+            } catch (e) {
+                // Catch any errors that occur during request setup
+                console.error('Error setting up request:', e);
+                showErrorMessage(speakingForm, 'Error setting up request: ' + e.message);
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
         });
     }
     
@@ -224,8 +314,15 @@ function initFormHandlers() {
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
                 
-            // Add debug info
+            // Add detailed debug info
             formData.append('device_info', navigator.userAgent);
+            
+            // Add network information if available
+            if (navigator.connection) {
+                formData.append('network_type', navigator.connection.type || 'unknown');
+                formData.append('network_downlink', navigator.connection.downlink || 'unknown');
+                formData.append('network_rtt', navigator.connection.rtt || 'unknown');
+            }
             
             // Use XMLHttpRequest instead of fetch for better compatibility on mobile
             const xhr = new XMLHttpRequest();
@@ -259,8 +356,26 @@ function initFormHandlers() {
                 }
             };
             
-            xhr.onerror = function() {
-                showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Full error: ' + JSON.stringify(xhr));
+            xhr.onerror = function(e) {
+                // Get detailed error information
+                const errorDetails = {
+                    readyState: xhr.readyState,
+                    status: xhr.status,
+                    statusText: xhr.statusText || 'No status text',
+                    responseType: xhr.responseType,
+                    responseURL: xhr.responseURL || 'No response URL',
+                    errorEvent: e ? e.type : 'No event details'
+                };
+                
+                console.error('XHR Error Details:', errorDetails);
+                
+                // Special handling for iPhone SE
+                if (navigator.userAgent.includes('iPhone') && !navigator.userAgent.includes('iPhone OS 1') && !navigator.userAgent.includes('iPhone OS 1')) {
+                    showErrorMessage(registrationForm, 'Network error on iPhone. Please try using WiFi instead of cellular data, or try again later.<br>Error details: ' + JSON.stringify(errorDetails));
+                } else {
+                    showErrorMessage(registrationForm, 'Network error occurred. Please check your connection and try again.<br>Error details: ' + JSON.stringify(errorDetails));
+                }
+                
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
             };
@@ -271,10 +386,30 @@ function initFormHandlers() {
                 submitBtn.disabled = false;
             };
             
-            // Open and send the request
-            xhr.open('POST', scriptUrl, true);
-            xhr.timeout = 30000; // 30 seconds timeout
-            xhr.send(formData);
+            // Add additional headers and settings for better mobile compatibility
+            try {
+                // Open and send the request
+                xhr.open('POST', scriptUrl, true);
+                xhr.timeout = 30000; // 30 seconds timeout
+                
+                // Log the request details for debugging
+                console.log('Sending request to:', scriptUrl);
+                
+                // Add a specific header to identify mobile submissions
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                
+                // Send the form data
+                xhr.send(formData);
+                
+                // Log that the request was sent
+                console.log('Request sent successfully');
+            } catch (e) {
+                // Catch any errors that occur during request setup
+                console.error('Error setting up request:', e);
+                showErrorMessage(registrationForm, 'Error setting up request: ' + e.message);
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
         });
     }
     
@@ -312,7 +447,7 @@ function initFormHandlers() {
         // Insert after form
         form.parentNode.insertBefore(errorMessage, form.nextSibling);
         
-        // Remove message after 5 seconds
+        // Remove message after 15 seconds
         setTimeout(() => {
             errorMessage.remove();
         }, 15000); // Longer timeout for error messages to allow reading
