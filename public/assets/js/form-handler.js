@@ -117,102 +117,54 @@ function initFormHandlers() {
             e.preventDefault();
             
             // Get form data
-            const fullName = sponsorForm.querySelector('input[name="fullName"]').value;
-            const email = sponsorForm.querySelector('input[name="email"]').value;
-            const company = sponsorForm.querySelector('input[name="company"]').value;
-            const jobTitle = sponsorForm.querySelector('input[name="jobTitle"]').value;
-            const contactNumber = sponsorForm.querySelector('input[name="contactNumber"]').value;
-            const interest = sponsorForm.querySelector('select[name="interest"]').value;
+            const formData = new FormData(sponsorForm);
+            const fullName = formData.get('fullName');
+            const email = formData.get('email');
+            const company = formData.get('company');
+            const jobTitle = formData.get('jobTitle');
+            const contactNumber = formData.get('contactNumber');
+            const interest = formData.get('interest');
             
-            // Show loading state
-            const submitBtn = sponsorForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
+            // Validate form
+            if (!fullName || !email || !company || !jobTitle || !contactNumber || !interest) {
+                showErrorMessage(sponsorForm, 'Please fill in all required fields.');
+                return;
+            }
             
-            // Create form data for AJAX request
-            const formData = new FormData();
+            // Append form data
             formData.append('fullName', fullName);
             formData.append('email', email);
             formData.append('company', company);
             formData.append('jobTitle', jobTitle);
             formData.append('contactNumber', contactNumber);
-            formData.append('interest', interest);
             
             // Send data to PHP script for database storage
             const isProduction = window.location.hostname === 'hrdconference.com';
             const scriptUrl = isProduction 
                 ? 'https://hrdconference.com/store-sponsorship.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-sponsorship.php';
-                
-            // Detect if on mobile network
-            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
-            // Add retry mechanism for mobile networks
-            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-                try {
-                    const response = await fetch(url, options);
-                    
-                    // Check if response is ok (status in the range 200-299)
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+            // Submit form using the optimized function
+            submitFormData(sponsorForm, scriptUrl, formData)
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        sponsorForm.reset();
+                    } else {
+                        // Show error message
+                        showErrorMessage(sponsorForm, data.message || 'There was a problem with your submission. Please try again.');
                     }
+                })
+                .catch(error => {
+                    // Log error to server-side log file
+                    window.logErrorToServer('sponsorship', error);
                     
-                    return response;
-                } catch (err) {
-                    if (retries <= 1) throw err;
-                    
-                    // Exponential backoff - increase delay with each retry
-                    const nextDelay = delay * 1.5;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    
-                    return fetchWithRetry(url, options, retries - 1, nextDelay);
-                }
-            };
-            
-            // Use more robust fetch with retry for mobile
-            fetchWithRetry(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors',
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                // Increase timeout for mobile networks
-                timeout: isMobileNetwork ? 30000 : 10000
-            })
-            .then(response => response.json())
-            .then(data => {
-                
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(sponsorForm, 'Your sponsorship inquiry has been successfully submitted and stored in our database.');
-                    
-                    // Reset form
-                    sponsorForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(sponsorForm, 'There was a problem storing your inquiry: ' + data.message);
-                }
-            })
-            .catch(error => {
-                // Log error to server-side log file
-                window.logErrorToServer('sponsorship', error);
-                
-                // Show generic error message to user
-                showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
+                    // Show generic error message to user
+                    showErrorMessage(sponsorForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                });
         });
     }
 
@@ -223,20 +175,20 @@ function initFormHandlers() {
             e.preventDefault();
             
             // Get form data
-            const fullName = speakingForm.querySelector('input[placeholder="Full Name"]').value;
-            const email = speakingForm.querySelector('input[placeholder="Email Address"]').value;
-            const company = speakingForm.querySelector('input[placeholder="Company Name"]').value;
-            const jobTitle = speakingForm.querySelector('input[placeholder="Job Title"]').value;
-            const contactNumber = speakingForm.querySelector('input[placeholder="Contact Number"]').value;
+            const formData = new FormData(speakingForm);
+            const fullName = formData.get('fullName');
+            const email = formData.get('email');
+            const company = formData.get('company');
+            const jobTitle = formData.get('jobTitle');
+            const contactNumber = formData.get('contactNumber');
             
-            // Show loading state
-            const submitBtn = speakingForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
+            // Validate form
+            if (!fullName || !email || !company || !jobTitle || !contactNumber) {
+                showErrorMessage(speakingForm, 'Please fill in all required fields.');
+                return;
+            }
             
-            // Create form data for AJAX request
-            const formData = new FormData();
+            // Append form data
             formData.append('fullName', fullName);
             formData.append('email', email);
             formData.append('company', company);
@@ -248,74 +200,28 @@ function initFormHandlers() {
             const scriptUrl = isProduction 
                 ? 'https://hrdconference.com/store-speaker.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-speaker.php';
-                
-            // Detect if on mobile network
-            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
-            // Add retry mechanism for mobile networks
-            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-                try {
-                    const response = await fetch(url, options);
-                    
-                    // Check if response is ok (status in the range 200-299)
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+            // Submit form using the optimized function
+            submitFormData(speakingForm, scriptUrl, formData)
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        speakingForm.reset();
+                    } else {
+                        // Show error message
+                        showErrorMessage(speakingForm, data.message || 'There was a problem with your submission. Please try again.');
                     }
+                })
+                .catch(error => {
+                    // Log error to server-side log file
+                    window.logErrorToServer('speaker', error);
                     
-                    return response;
-                } catch (err) {
-                    if (retries <= 1) throw err;
-                    
-                    // Exponential backoff - increase delay with each retry
-                    const nextDelay = delay * 1.5;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    
-                    return fetchWithRetry(url, options, retries - 1, nextDelay);
-                }
-            };
-            
-            // Use more robust fetch with retry for mobile
-            fetchWithRetry(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors',
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                // Increase timeout for mobile networks
-                timeout: isMobileNetwork ? 30000 : 10000
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(speakingForm, 'Your speaker application has been successfully submitted and stored in our database.');
-                    
-                    // Reset form
-                    speakingForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(speakingForm, 'There was a problem storing your application: ' + data.message);
-                }
-            })
-            .catch(error => {
-                // Log error to server-side log file
-                window.logErrorToServer('speaker', error);
-                
-                // Show generic error message to user
-                showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
+                    // Show generic error message to user
+                    showErrorMessage(speakingForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                });
         });
     }
     
@@ -326,113 +232,66 @@ function initFormHandlers() {
             e.preventDefault();
             
             // Get form data
-            const fullName = registrationForm.querySelector('input[placeholder="Full Name"]').value;
-            const email = registrationForm.querySelector('input[placeholder="Email Address"]').value;
-            const company = registrationForm.querySelector('input[placeholder="Company Name"]').value;
-            const jobTitle = registrationForm.querySelector('input[placeholder="Job Title"]').value;
-            const contactNumber = registrationForm.querySelector('input[placeholder="Contact Number"]').value;
-            const promoCode = registrationForm.querySelector('input[placeholder="Promo Code (optional)"]').value;
+            const formData = new FormData(registrationForm);
+            const fullName = formData.get('fullName');
+            const email = formData.get('email');
+            const company = formData.get('company');
+            const jobTitle = formData.get('jobTitle');
+            const contactNumber = formData.get('contactNumber');
+            const promoCode = formData.get('promoCode') || ''; // Optional
             
-            // Show loading state
-            const submitBtn = registrationForm.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
-            submitBtn.disabled = true;
+            // Validate form
+            if (!fullName || !email || !company || !jobTitle || !contactNumber) {
+                showErrorMessage(registrationForm, 'Please fill in all required fields.');
+                return;
+            }
             
-            // Create form data for AJAX request
-            const formData = new FormData();
+            // Append form data
             formData.append('fullName', fullName);
             formData.append('email', email);
             formData.append('company', company);
             formData.append('jobTitle', jobTitle);
             formData.append('contactNumber', contactNumber);
-            formData.append('promoCode', promoCode);
             
             // Send data to PHP script for database storage
             const isProduction = window.location.hostname === 'hrdconference.com';
             const scriptUrl = isProduction 
                 ? 'https://hrdconference.com/store-registration.php' 
                 : 'http://localhost:8080/HRD-Conference/public/store-registration.php';
-                
-            // Detect if on mobile network
-            const isMobileNetwork = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
-            // Add retry mechanism for mobile networks
-            const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-                try {
-                    const response = await fetch(url, options);
-                    
-                    // Check if response is ok (status in the range 200-299)
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+            // Submit form using the optimized function
+            submitFormData(registrationForm, scriptUrl, formData)
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                        
+                        // Reset form
+                        registrationForm.reset();
+                    } else {
+                        // Show error message
+                        showErrorMessage(registrationForm, data.message || 'There was a problem with your submission. Please try again.');
                     }
+                })
+                .catch(error => {
+                    // Log error to server-side log file
+                    window.logErrorToServer('registration', error);
                     
-                    return response;
-                } catch (err) {
-                    if (retries <= 1) throw err;
-                    
-                    // Exponential backoff - increase delay with each retry
-                    const nextDelay = delay * 1.5;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    
-                    return fetchWithRetry(url, options, retries - 1, nextDelay);
-                }
-            };
-            
-            // Use more robust fetch with retry for mobile
-            fetchWithRetry(scriptUrl, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
-                mode: 'cors',
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                // Increase timeout for mobile networks
-                timeout: isMobileNetwork ? 30000 : 10000
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
-                    
-                    // Reset form
-                    registrationForm.reset();
-                } else {
-                    // Show error message
-                    showErrorMessage(registrationForm, 'There was a problem with your registration: ' + data.message);
-                }
-            })
-            .catch(error => {
-                // Log error to server-side log file
-                window.logErrorToServer('registration', error);
-                
-                // Show generic error message to user
-                showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
-            });
+                    // Show generic error message to user
+                    showErrorMessage(registrationForm, 'There was a problem submitting your form. Please try again or contact us directly at admin@hrdconference.com');
+                });
         });
     }
     
     // Helper functions for form feedback
-    function showSuccessMessage(form, customMessage) {
+    function showSuccessMessage(form, message) {
         // Remove any existing messages
         removeMessages(form);
         
         // Create success message
         const successMessage = document.createElement('div');
         successMessage.className = 'form-message success-message';
-        successMessage.innerHTML = customMessage || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
+        successMessage.innerHTML = message || '<i class="lni-check-mark-circle"></i> Your form has been submitted successfully!';
         
         // Insert after form
         form.parentNode.insertBefore(successMessage, form.nextSibling);
@@ -446,14 +305,14 @@ function initFormHandlers() {
         }, 5000);
     }
     
-    function showErrorMessage(form, customMessage) {
+    function showErrorMessage(form, message) {
         // Remove any existing messages
         removeMessages(form);
         
         // Create error message
         const errorMessage = document.createElement('div');
         errorMessage.className = 'form-message error-message';
-        errorMessage.innerHTML = customMessage || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
+        errorMessage.innerHTML = message || '<i class="lni-warning"></i> There was a problem submitting your form. Please try again.';
         
         // Insert after form
         form.parentNode.insertBefore(errorMessage, form.nextSibling);
@@ -468,6 +327,93 @@ function initFormHandlers() {
         // Remove any existing messages
         const existingMessages = form.parentNode.querySelectorAll('.form-message');
         existingMessages.forEach(message => message.remove());
+    }
+    
+    // Function to submit form with optimized settings for mobile
+    async function submitFormData(form, url, formData) {
+        // Show loading indicator
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="lni-spinner lni-spin-effect"></i> Sending...';
+        
+        try {
+            // For mobile devices, use XMLHttpRequest which can be more reliable on some mobile networks
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    
+                    // Set up timeout (longer for mobile)
+                    xhr.timeout = 30000; // 30 seconds
+                    
+                    xhr.open('POST', url, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Cache-Control', 'no-cache');
+                    
+                    // Handle response
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                resolve(data);
+                            } catch (e) {
+                                reject(new Error('Invalid JSON response'));
+                            }
+                        } else {
+                            reject(new Error('Request failed with status: ' + xhr.status));
+                        }
+                    };
+                    
+                    // Handle errors
+                    xhr.onerror = function() {
+                        reject(new Error('Network error occurred'));
+                    };
+                    
+                    xhr.ontimeout = function() {
+                        reject(new Error('Request timed out'));
+                    };
+                    
+                    // Send the form data
+                    xhr.send(formData);
+                });
+            } else {
+                // For desktop, use fetch with retry
+                const fetchWithRetry = async (retries = 3, delay = 1000) => {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include',
+                            mode: 'cors',
+                            cache: 'no-store',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Server responded with status ${response.status}`);
+                        }
+                        
+                        return await response.json();
+                    } catch (err) {
+                        if (retries <= 1) throw err;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return fetchWithRetry(retries - 1, delay * 1.5);
+                    }
+                };
+                
+                return await fetchWithRetry();
+            }
+        } finally {
+            // Reset button state
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+        }
     }
 }
 
