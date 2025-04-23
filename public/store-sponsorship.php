@@ -232,5 +232,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response['message'] = 'Invalid request method';
 }
 
-// Return JSON response
-echo json_encode($response);
+// Check if we need to redirect (for direct form submissions from mobile)
+if (isset($_POST['redirect_url']) && !empty($_POST['redirect_url'])) {
+    $redirectUrl = $_POST['redirect_url'];
+    // Add success parameter if not already present
+    if ($response['success']) {
+        $redirectUrl .= (strpos($redirectUrl, '?') !== false ? '&' : '?') . 'success=true';
+    } else {
+        $redirectUrl .= (strpos($redirectUrl, '?') !== false ? '&' : '?') . 'error=' . urlencode($response['message']);
+    }
+    
+    // Log the redirect
+    error_log("[" . date(TIMESTAMP_FORMAT) . "] Redirecting to: $redirectUrl");
+    
+    // Redirect
+    header("Location: $redirectUrl");
+    exit;
+} else {
+    // Return JSON response for AJAX/iframe requests
+    echo json_encode($response);
+}

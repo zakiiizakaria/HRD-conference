@@ -85,10 +85,44 @@ function initFormHandlers() {
             
             // Set up a timeout for form submission
             const submissionTimeout = setTimeout(() => {
+                // If we hit the timeout on mobile, try a direct form submission instead
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('Android')) {
+                    // Create a new form for direct submission (not in iframe)
+                    const directForm = document.createElement('form');
+                    directForm.method = 'POST';
+                    directForm.action = tempForm.action;
+                    directForm.target = '_top'; // Submit to the main window
+                    
+                    // Copy all fields from the temp form
+                    Array.from(tempForm.elements).forEach(function(element) {
+                        directForm.appendChild(element.cloneNode(true));
+                    });
+                    
+                    // Add a success redirect URL
+                    const redirectInput = document.createElement('input');
+                    redirectInput.type = 'hidden';
+                    redirectInput.name = 'redirect_url';
+                    redirectInput.value = window.location.href + '?success=true';
+                    directForm.appendChild(redirectInput);
+                    
+                    // Add to document and submit
+                    document.body.appendChild(directForm);
+                    
+                    // Show message to user
+                    alert('Submitting your form directly. Please wait...');
+                    
+                    // Submit the form directly
+                    directForm.submit();
+                    
+                    // Don't show error message since we're trying direct submission
+                    return;
+                }
+                
+                // For non-mobile devices or as fallback, show timeout error
                 showErrorMessage(sponsorForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 30000); // 30 seconds timeout
+            }, 45000); // Extended timeout to 45 seconds for mobile
             
             // Listen for iframe load event
             iframe.onload = function() {
@@ -259,10 +293,44 @@ function initFormHandlers() {
             
             // Set up a timeout for form submission
             const submissionTimeout = setTimeout(() => {
+                // If we hit the timeout on mobile, try a direct form submission instead
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('Android')) {
+                    // Create a new form for direct submission (not in iframe)
+                    const directForm = document.createElement('form');
+                    directForm.method = 'POST';
+                    directForm.action = tempForm.action;
+                    directForm.target = '_top'; // Submit to the main window
+                    
+                    // Copy all fields from the temp form
+                    Array.from(tempForm.elements).forEach(function(element) {
+                        directForm.appendChild(element.cloneNode(true));
+                    });
+                    
+                    // Add a success redirect URL
+                    const redirectInput = document.createElement('input');
+                    redirectInput.type = 'hidden';
+                    redirectInput.name = 'redirect_url';
+                    redirectInput.value = window.location.href + '?success=true';
+                    directForm.appendChild(redirectInput);
+                    
+                    // Add to document and submit
+                    document.body.appendChild(directForm);
+                    
+                    // Show message to user
+                    alert('Submitting your form directly. Please wait...');
+                    
+                    // Submit the form directly
+                    directForm.submit();
+                    
+                    // Don't show error message since we're trying direct submission
+                    return;
+                }
+                
+                // For non-mobile devices or as fallback, show timeout error
                 showErrorMessage(speakingForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 30000); // 30 seconds timeout
+            }, 45000); // Extended timeout to 45 seconds for mobile
             
             // Listen for iframe load event
             iframe.onload = function() {
@@ -435,10 +503,44 @@ function initFormHandlers() {
             
             // Set up a timeout for form submission
             const submissionTimeout = setTimeout(() => {
+                // If we hit the timeout on mobile, try a direct form submission instead
+                if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') || navigator.userAgent.includes('Android')) {
+                    // Create a new form for direct submission (not in iframe)
+                    const directForm = document.createElement('form');
+                    directForm.method = 'POST';
+                    directForm.action = tempForm.action;
+                    directForm.target = '_top'; // Submit to the main window
+                    
+                    // Copy all fields from the temp form
+                    Array.from(tempForm.elements).forEach(function(element) {
+                        directForm.appendChild(element.cloneNode(true));
+                    });
+                    
+                    // Add a success redirect URL
+                    const redirectInput = document.createElement('input');
+                    redirectInput.type = 'hidden';
+                    redirectInput.name = 'redirect_url';
+                    redirectInput.value = window.location.href + '?success=true';
+                    directForm.appendChild(redirectInput);
+                    
+                    // Add to document and submit
+                    document.body.appendChild(directForm);
+                    
+                    // Show message to user
+                    alert('Submitting your form directly. Please wait...');
+                    
+                    // Submit the form directly
+                    directForm.submit();
+                    
+                    // Don't show error message since we're trying direct submission
+                    return;
+                }
+                
+                // For non-mobile devices or as fallback, show timeout error
                 showErrorMessage(registrationForm, 'Your request is taking longer than expected. Please try again later.');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
-            }, 30000); // 30 seconds timeout
+            }, 45000); // Extended timeout to 45 seconds for mobile
             
             // Listen for iframe load event
             iframe.onload = function() {
