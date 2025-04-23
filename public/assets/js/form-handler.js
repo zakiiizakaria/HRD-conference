@@ -125,12 +125,12 @@ function initFormHandlers() {
             submitBtn.disabled = true;
             
             // Create form data for AJAX request
-            const formData = new FormData();
-            formData.append('fullName', fullName);
-            formData.append('email', email);
-            formData.append('company', company);
-            formData.append('jobTitle', jobTitle);
-            formData.append('contactNumber', contactNumber);
+            const urlEncodedData = new URLSearchParams();
+            urlEncodedData.append('fullName', fullName);
+            urlEncodedData.append('email', email);
+            urlEncodedData.append('company', company);
+            urlEncodedData.append('jobTitle', jobTitle);
+            urlEncodedData.append('contactNumber', contactNumber);
             
             // Send data to PHP script for database storage
             const isProduction = window.location.hostname === 'hrdconference.com';
@@ -140,11 +140,12 @@ function initFormHandlers() {
                 
             fetch(scriptUrl, {
                 method: 'POST',
-                body: formData,
+                body: urlEncodedData.toString(),
                 credentials: 'include',
                 mode: 'cors',
                 cache: 'no-store',
                 headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
                     'X-Requested-With': 'XMLHttpRequest'
