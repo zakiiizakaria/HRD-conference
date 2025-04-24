@@ -31,12 +31,25 @@ function initializeFormHandlers() {
 
 // Function to handle form submissions
 function initFormHandlers() {
+    // Submission flags to prevent double submissions
+    let sponsorSubmitting = false;
+    let speakerSubmitting = false;
+    let registrationSubmitting = false;
     
     // Sponsorship Form Handler
     const sponsorForm = document.getElementById('sponsor-form');
     if (sponsorForm) {
         sponsorForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Prevent double submissions
+            if (sponsorSubmitting) {
+                console.log('Sponsorship form already submitting');
+                return;
+            }
+            
+            // Set submission flag
+            sponsorSubmitting = true;
             
             // Get form data
             const fullName = sponsorForm.querySelector('input[name="fullName"]').value;
@@ -111,6 +124,15 @@ function initFormHandlers() {
         speakingForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Prevent double submissions
+            if (speakerSubmitting) {
+                console.log('Speaker form already submitting');
+                return;
+            }
+            
+            // Set submission flag
+            speakerSubmitting = true;
+            
             // Get form data
             const fullName = speakingForm.querySelector('input[placeholder="Full Name"]').value;
             const email = speakingForm.querySelector('input[placeholder="Email Address"]').value;
@@ -181,6 +203,15 @@ function initFormHandlers() {
         registrationForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Prevent double submissions
+            if (registrationSubmitting) {
+                console.log('Registration form already submitting');
+                return;
+            }
+            
+            // Set submission flag
+            registrationSubmitting = true;
+            
             // Get form data
             const fullName = registrationForm.querySelector('input[placeholder="Full Name"]').value;
             const email = registrationForm.querySelector('input[placeholder="Email Address"]').value;
@@ -226,7 +257,7 @@ function initFormHandlers() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    showSuccessMessage(registrationForm, 'Thank You! Your registration has been successfully submitted and stored in our database.');
+                    showSuccessMessage(registrationForm, 'Thank you for registering! We’ll be in touch with you soon.');
                     
                     // Reset form
                     registrationForm.reset();
