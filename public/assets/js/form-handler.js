@@ -226,7 +226,7 @@ function initFormHandlers() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    showSuccessMessage(registrationForm, 'Your registration has been successfully submitted and stored in our database.');
+                    showSuccessMessage(registrationForm, 'Thank You! Your registration has been successfully submitted and stored in our database.');
                     
                     // Reset form
                     registrationForm.reset();
