@@ -257,7 +257,7 @@ function initFormHandlers() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    showSuccessMessage(registrationForm, 'Thank you for registering! We’ll be in touch with you soon.');
+                    showSuccessMessage(registrationForm, 'Registered successfully! We’ll get back to you soon.');
                     
                     // Reset form
                     registrationForm.reset();
