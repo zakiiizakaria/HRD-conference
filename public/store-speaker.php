@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $adminEmailResult = sendEmail(
                 [
                     'admin@roomofleaders.com',
-                    'abdul@roomofleaders.com',
+                    'adam@roomofleaders.com',
                 ],
                 'HRD Conference Admin',
                 'New Speaker Application from ' . $fullName,
